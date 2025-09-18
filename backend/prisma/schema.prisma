@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Fornecedor {
+  id          String   @id @default(uuid())
+  nome        String
+  documento   String   @unique
+  endereco    Json?
+  contato     Json?
+  fazenda     String?
+  observacoes String?
+  saldo       Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  compras     Compra[]
+  tickets     Ticket[]
+
+  @@map("fornecedores")
+}
+
+model Ticket {
+  id           String       @id @default(uuid())
+  fornecedorId String
+  pesoBruto    Decimal      @db.Decimal(8, 3)
+  pesoLiquido  Decimal      @db.Decimal(8, 3)
+  observacoes  String?
+  status       TicketStatus @default(PENDENTE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  compra       Compra?
+  fornecedor   Fornecedor   @relation(fields: [fornecedorId], references: [id])
+
+  @@map("tickets")
+}
+
+model Compra {
+  id              String          @id @default(uuid())
+  ticketId        String          @unique
+  fornecedorId    String
+  precoPorKg      Decimal         @default(0) @db.Decimal(8, 2)
+  valorTotal      Decimal         @db.Decimal(10, 2)
+  statusPagamento StatusPagamento @default(PENDENTE)
+  observacoes     String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  precoPorArroba  Decimal         @db.Decimal(8, 2)
+  fornecedor      Fornecedor      @relation(fields: [fornecedorId], references: [id])
+  ticket          Ticket          @relation(fields: [ticketId], references: [id])
+  pagamentos      Pagamento[]
+
+  @@map("compras")
+}
+
+model Pagamento {
+  id              String           @id @default(uuid())
+  compraId        String
+  valorPago       Decimal          @db.Decimal(10, 2)
+  metodoPagamento MetodoPagamento?
+  observacoes     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  compra          Compra           @relation(fields: [compraId], references: [id])
+
+  @@map("pagamentos")
+}
+
+enum TicketStatus {
+  PENDENTE
+  CONVERTIDO
+}
+
+enum StatusPagamento {
+  PENDENTE
+  PARCIAL
+  PAGO
+}
+
+enum MetodoPagamento {
+  DINHEIRO
+  PIX
+  TRANSFERENCIA
+  CHEQUE
+}
