@@ -1,0 +1,52 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+
+# Dependency directories
+node_modules/
+
+# Environment variables
+.env.example
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS specific
+.DS_Store
+
+# Task files
+# tasks.json
+# tasks/ 
+
+# Node.js (backend)
+backend/node_modules/
+backend/.env
+backend/dist/
+
+# Vite/React (frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+#Taskmaster
+.taskmaster/
+.trae/
+.taskmaster/docs/
+.taskmaster/rules/
+.taskmaster/tasks/
+.taskmaster/state.json
+.taskmaster/config.json
+.taskmaster/mcp.json
+.taskmaster/assets/
+.taskmaster/assets/env.example
+
