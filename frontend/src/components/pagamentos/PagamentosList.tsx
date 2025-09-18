@@ -49,7 +49,7 @@ export function PagamentosList({
       try {
         await deleteMutation.mutateAsync({
           id: pagamento.id,
-          compraId: pagamento.compraId
+          compraId: pagamento.compraId,
         });
         // Chamar callback para atualizar a lista
         onDelete?.();
@@ -111,7 +111,7 @@ export function PagamentosList({
   }
 
   return (
-    <Card className="border-gray-400 border">
+    <Card className="border-gray-400 border max-h-[500px] overflow-y-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <DollarSign className="h-5 w-5" />
@@ -212,7 +212,9 @@ export function PagamentosList({
                 currency: "BRL",
               }).format(
                 pagamentos.reduce(
-                  (total, pagamento) => total + pagamento.valorPago,
+                  (total, pagamento) =>
+                    parseFloat(Number(total).toString()) +
+                    parseFloat(pagamento.valorPago.toString()),
                   0
                 )
               )}

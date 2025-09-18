@@ -26,9 +26,7 @@ const pagamentoSchema = z.object({
   compraId: z.string().min(1, "ID da compra é obrigatório"),
   valorPago: z.number().positive("Valor deve ser maior que zero"),
   metodoPagamento: z
-    .enum(["DINHEIRO", "PIX", "TRANSFERENCIA", "CHEQUE"], {
-      errorMap: () => ({ message: "Selecione um método de pagamento" }),
-    })
+    .enum(["DINHEIRO", "PIX", "TRANSFERENCIA", "CHEQUE"])
     .optional(),
   observacoes: z.string().optional(),
 });
@@ -141,7 +139,7 @@ export function PagamentoForm({
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Card className="w-full max-w-2xl border-none shadow-none">
+    <Card className="w-full max-w-2xl border-none shadow-none max-h-[500px] overflow-y-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <DollarSign className="h-5 w-5" />
@@ -150,7 +148,7 @@ export function PagamentoForm({
       </CardHeader>
       <CardContent>
         {/* Informações da Compra */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mb-6 p-2 bg-gray-50 rounded-lg">
           <h3 className="font-medium mb-2">Informações da Compra</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -263,7 +261,7 @@ export function PagamentoForm({
               id="observacoes"
               placeholder="Observações sobre o pagamento..."
               {...register("observacoes")}
-              rows={3}
+              rows={2}
             />
           </div>
 

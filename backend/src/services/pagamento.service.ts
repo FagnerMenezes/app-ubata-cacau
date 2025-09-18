@@ -106,9 +106,9 @@ export class PagamentoService {
     }
 
     // Calcular informações adicionais
-    const valorTotalCompra = Number(pagamento.compra.valorTotal);
+    const valorTotalCompra = pagamento.compra.valorTotal.toNumber();
     const valorTotalPago = pagamento.compra.pagamentos.reduce(
-      (total: number, pag) => total + Number(pag.valorPago),
+      (total: number, pag: any) => total + (pag?.valorPago?.toNumber() || 0),
       0
     );
     const saldoRestante = valorTotalCompra - valorTotalPago;
@@ -148,11 +148,11 @@ export class PagamentoService {
 
       // Calcular valor já pago
       const valorJaPago = compra.pagamentos.reduce(
-        (total, pagamento) => total + Number(pagamento.valorPago),
+        (total, pagamento) => total + pagamento.valorPago.toNumber(),
         0
       );
 
-      const valorTotalCompra = Number(compra.valorTotal);
+      const valorTotalCompra = compra.valorTotal.toNumber();
       const saldoRestante = valorTotalCompra - valorJaPago;
 
       // Verificar se o pagamento não excede o saldo
@@ -195,8 +195,7 @@ export class PagamentoService {
       });
 
       // Atualizar saldo do fornecedor
-      const novoSaldoFornecedor =
-        Number(compra.fornecedor.saldo) - data.valorPago;
+      const novoSaldoFornecedor = compra.fornecedor.saldo.minus(data.valorPago);
       await tx.fornecedor.update({
         where: { id: compra.fornecedorId },
         data: { saldo: novoSaldoFornecedor },
@@ -248,11 +247,11 @@ export class PagamentoService {
         (p) => p.id !== id
       );
       const valorTotalPago = pagamentosRestantes.reduce(
-        (total, pag) => total + Number(pag.valorPago),
+        (total, pag) => total + pag.valorPago.toNumber(),
         0
       );
 
-      const valorTotalCompra = Number(pagamento.compra.valorTotal);
+      const valorTotalCompra = pagamento.compra.valorTotal.toNumber();
       let novoStatus: "PENDENTE" | "PARCIAL" | "PAGO" = "PENDENTE";
 
       if (valorTotalPago >= valorTotalCompra) {
@@ -268,8 +267,9 @@ export class PagamentoService {
       });
 
       // Reverter saldo do fornecedor
-      const novoSaldoFornecedor =
-        Number(pagamento.compra.fornecedor.saldo) + Number(pagamento.valorPago);
+      const novoSaldoFornecedor = pagamento.compra.fornecedor.saldo.plus(
+        pagamento.valorPago
+      );
       await tx.fornecedor.update({
         where: { id: pagamento.compra.fornecedorId },
         data: { saldo: novoSaldoFornecedor },
@@ -295,11 +295,11 @@ export class PagamentoService {
     const numeroPagamento = pagamentosAnteriores.length + 1;
     const valorTotalPago =
       pagamentosAnteriores.reduce(
-        (total, pag) => total + Number(pag.valorPago),
+        (total, pag) => total + pag.valorPago.toNumber(),
         0
-      ) + Number(pagamento.valorPago);
+      ) + pagamento.valorPago.toNumber();
 
-    const valorTotalCompra = Number(pagamento.compra.valorTotal);
+    const valorTotalCompra = pagamento.compra.valorTotal.toNumber();
     const saldoRestante = valorTotalCompra - valorTotalPago;
 
     return {
@@ -307,15 +307,15 @@ export class PagamentoService {
         id: pagamento.id,
         numeroPagamento,
         data: pagamento.createdAt,
-        valor: Number(pagamento.valorPago),
+        valor: pagamento.valorPago.toNumber(),
         observacoes: "",
         compra: {
           id: pagamento.compra.id,
           valorTotal: valorTotalCompra,
-          precoKg: Number(pagamento.compra.precoPorKg),
+          precoKg: pagamento.compra.precoPorKg.toNumber(),
           ticket: {
             numeroTicket: pagamento.compra.ticket.id,
-            pesoLiquido: Number(pagamento.compra.ticket.pesoLiquido),
+            pesoLiquido: pagamento.compra.ticket.pesoLiquido.toNumber(),
           },
         },
         fornecedor: {
@@ -420,10 +420,10 @@ export class PagamentoService {
 
     // Calcular informações resumidas
     const valorTotalPago = pagamentos.reduce(
-      (total, pagamento) => total + Number(pagamento.valorPago),
+      (total, pagamento) => total + pagamento.valorPago.toNumber(),
       0
     );
-    const valorTotalCompra = Number(compra.valorTotal);
+    const valorTotalCompra = compra.valorTotal.toNumber();
     const saldoRestante = valorTotalCompra - valorTotalPago;
 
     return {
@@ -460,12 +460,11 @@ export class PagamentoService {
     }
 
     const valorJaPago = (compra as any).pagamentos?.reduce(
-      (total: number, pagamento: { valorPago: number }) =>
-        total + Number(pagamento.valorPago),
+      (total: number, pagamento: any) => total + pagamento.valorPago.toNumber(),
       0
     );
 
-    const valorTotalCompra = Number(compra.valorTotal);
+    const valorTotalCompra = compra.valorTotal.toNumber();
     const saldoRestante = valorTotalCompra - valorJaPago;
 
     if (valor > saldoRestante) {

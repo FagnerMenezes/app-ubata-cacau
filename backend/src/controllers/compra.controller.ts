@@ -1,24 +1,24 @@
 import { Pagamento } from "@prisma/client";
 import { Request, Response } from "express";
-import { CompraService } from "../services/compra.service";
 import { CustomError } from "../middleware/error.middleware";
+import { CompraService } from "../services/compra.service";
 
 export class CompraController {
   static async findAll(req: Request, res: Response) {
     try {
       const resultado = await CompraService.listarCompras(req.query as any);
       return res.json(resultado);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao listar compras:", error);
 
-      if (error) {
-        //@ts-expect-error err
+      // Verificar se é um erro customizado com statusCode
+      if (error && typeof error.statusCode === "number") {
         return res.status(error.statusCode).json({
-          //@ts-expect-error err
           error: error.message,
         });
       }
 
+      // Para outros erros, retornar 500
       return res.status(500).json({
         error: "Erro interno do servidor",
       });
@@ -67,7 +67,10 @@ export class CompraController {
   static async update(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const compraAtualizada = await CompraService.atualizar(id as string, req.body);
+      const compraAtualizada = await CompraService.atualizar(
+        id as string,
+        req.body
+      );
       return res.json(compraAtualizada);
     } catch (error) {
       console.error("Erro ao atualizar compra:", error);
@@ -107,7 +110,9 @@ export class CompraController {
   static async obterEstatisticas(req: Request, res: Response) {
     try {
       const { periodo } = req.query;
-      const estatisticas = await CompraService.obterEstatisticas(periodo as string);
+      const estatisticas = await CompraService.obterEstatisticas(
+        periodo as string
+      );
       return res.json(estatisticas);
     } catch (error) {
       console.error("Erro ao obter estatísticas:", error);
@@ -163,7 +168,7 @@ export class CompraController {
       // Calcular status baseado nos pagamentos
       const totalPago =
         compra.pagamentos?.reduce(
-          (sum: number, pag: Pagamento) => sum + Number(pag.valorPago),
+          (sum: number, pag: Pagamento) => sum + pag.valorPago.toNumber(),
           0
         ) || 0;
       const valorTotal = Number(compra.valorTotal);

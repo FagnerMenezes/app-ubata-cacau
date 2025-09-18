@@ -1,9 +1,4 @@
-import { Compra, Fornecedor } from "@prisma/client";
 import { prisma } from "../lib/prisma";
-import { CompraModel } from "../models/compra.model";
-import { FornecedorModel } from "../models/fornecedor.model";
-import { PagamentoModel } from "../models/pagamento.model";
-import { TicketModel } from "../models/ticket.model";
 
 export class RelatorioService {
   // ✅ SIMPLIFICADO: Relatório de Compras
@@ -15,7 +10,14 @@ export class RelatorioService {
     page?: number;
     limit?: number;
   }) {
-    const { dataInicio, dataFim, fornecedorId, statusPagamento, page = 1, limit = 50 } = params;
+    const {
+      dataInicio,
+      dataFim,
+      fornecedorId,
+      statusPagamento,
+      page = 1,
+      limit = 50,
+    } = params;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -53,10 +55,10 @@ export class RelatorioService {
     ]);
 
     return {
-      compras: compras.map(compra => ({
+      compras: compras.map((compra) => ({
         ...compra,
-        valorTotal: Number(compra.valorTotal),
-        precoPorKg: Number(compra.precoPorKg),
+        valorTotal: compra.valorTotal.toNumber(),
+        precoPorKg: compra.precoPorKg.toNumber(),
         totalPagamentos: compra._count.pagamentos,
       })),
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
@@ -78,12 +80,15 @@ export class RelatorioService {
     const { dataInicio, dataFim, page = 1, limit = 50 } = params;
     const skip = (page - 1) * limit;
 
-    const dateFilter = dataInicio || dataFim ? {
-      createdAt: {
-        ...(dataInicio && { gte: new Date(dataInicio) }),
-        ...(dataFim && { lte: new Date(dataFim) }),
-      }
-    } : {};
+    const dateFilter =
+      dataInicio || dataFim
+        ? {
+            createdAt: {
+              ...(dataInicio && { gte: new Date(dataInicio) }),
+              ...(dataFim && { lte: new Date(dataFim) }),
+            },
+          }
+        : {};
 
     const [fornecedores, total] = await Promise.all([
       prisma.fornecedor.findMany({
@@ -95,7 +100,7 @@ export class RelatorioService {
             select: {
               compras: { where: dateFilter },
               tickets: { where: { ...dateFilter, status: "PENDENTE" } },
-            }
+            },
           },
           compras: {
             where: dateFilter,
@@ -103,31 +108,37 @@ export class RelatorioService {
               valorTotal: true,
               ticket: { select: { pesoLiquido: true } },
               _count: { select: { pagamentos: true } },
-            }
-          }
+            },
+          },
         },
       }),
       prisma.fornecedor.count(),
     ]);
 
-    const fornecedoresProcessados = fornecedores.map(fornecedor => {
-      const valorTotalCompras = fornecedor.compras.reduce((sum, c) => sum + Number(c.valorTotal), 0);
-      const pesoTotal = fornecedor.compras.reduce((sum, c) => sum + Number(c.ticket.pesoLiquido), 0);
-      
+    const fornecedoresProcessados = fornecedores.map((fornecedor) => {
+      const valorTotalCompras = fornecedor.compras.reduce(
+        (sum, c) => sum + c.valorTotal.toNumber(),
+        0
+      );
+      const pesoTotal = fornecedor.compras.reduce(
+        (sum, c) => sum + c.ticket.pesoLiquido.toNumber(),
+        0
+      );
+
       return {
         id: fornecedor.id,
         nome: fornecedor.nome,
         documento: fornecedor.documento,
         contato: fornecedor.contato,
         endereco: fornecedor.endereco,
-        saldo: Number(fornecedor.saldo),
+        saldo: fornecedor.saldo.toNumber(),
         estatisticas: {
           totalCompras: fornecedor._count.compras,
           valorTotalCompras,
           pesoTotal,
           ticketsPendentes: fornecedor._count.tickets,
           precoMedio: pesoTotal > 0 ? valorTotalCompras / pesoTotal : 0,
-        }
+        },
       };
     });
 
@@ -140,13 +151,16 @@ export class RelatorioService {
   // ✅ SIMPLIFICADO: Dashboard
   static async dashboard(params?: { dataInicio?: string; dataFim?: string }) {
     const { dataInicio, dataFim } = params || {};
-    
-    const dateFilter = dataInicio || dataFim ? {
-      createdAt: {
-        ...(dataInicio && { gte: new Date(dataInicio) }),
-        ...(dataFim && { lte: new Date(dataFim) }),
-      }
-    } : {};
+
+    const dateFilter =
+      dataInicio || dataFim
+        ? {
+            createdAt: {
+              ...(dataInicio && { gte: new Date(dataInicio) }),
+              ...(dataFim && { lte: new Date(dataFim) }),
+            },
+          }
+        : {};
 
     const [metricas, distribuicoes] = await Promise.all([
       // Métricas principais em uma única query
@@ -165,7 +179,7 @@ export class RelatorioService {
           _sum: { valorPago: true },
         }),
       ]),
-      
+
       // Distribuições
       Promise.all([
         prisma.compra.groupBy({
@@ -183,7 +197,8 @@ export class RelatorioService {
       ]),
     ]);
 
-    const [totalFornecedores, totalTickets, comprasStats, pagamentosStats] = metricas;
+    const [totalFornecedores, totalTickets, comprasStats, pagamentosStats] =
+      metricas;
     const [comprasPorStatus, ticketsPorStatus] = distribuicoes;
 
     return {
@@ -197,15 +212,15 @@ export class RelatorioService {
         precoMedio: Number(comprasStats._avg.precoPorKg || 0),
       },
       distribuicoes: {
-        comprasPorStatus: comprasPorStatus.map(item => ({
+        comprasPorStatus: comprasPorStatus.map((item) => ({
           status: item.statusPagamento,
           quantidade: item._count,
-          valor: Number(item._sum.valorTotal || 0),
+          valor: item._sum.valorTotal?.toNumber() || 0,
         })),
-        ticketsPorStatus: ticketsPorStatus.map(item => ({
+        ticketsPorStatus: ticketsPorStatus.map((item) => ({
           status: item.status,
           quantidade: item._count,
-          peso: Number(item._sum.pesoLiquido || 0),
+          peso: item._sum.pesoLiquido?.toNumber() || 0,
         })),
       },
     };
@@ -218,18 +233,24 @@ export class RelatorioService {
     fornecedorId?: string;
   }) {
     const { dataInicio, dataFim, fornecedorId } = params;
-    
-    const dateFilter = dataInicio || dataFim ? {
-      createdAt: {
-        ...(dataInicio && { gte: new Date(dataInicio) }),
-        ...(dataFim && { lte: new Date(dataFim) }),
-      }
-    } : {};
 
-    const whereCompras = { ...dateFilter, ...(fornecedorId && { fornecedorId }) };
-    const wherePagamentos = { 
-      ...dateFilter, 
-      ...(fornecedorId && { compra: { fornecedorId } }) 
+    const dateFilter =
+      dataInicio || dataFim
+        ? {
+            createdAt: {
+              ...(dataInicio && { gte: new Date(dataInicio) }),
+              ...(dataFim && { lte: new Date(dataFim) }),
+            },
+          }
+        : {};
+
+    const whereCompras = {
+      ...dateFilter,
+      ...(fornecedorId && { fornecedorId }),
+    };
+    const wherePagamentos = {
+      ...dateFilter,
+      ...(fornecedorId && { compra: { fornecedorId } }),
     };
 
     const [compras, pagamentos] = await Promise.all([
@@ -254,38 +275,44 @@ export class RelatorioService {
             select: {
               fornecedor: { select: { nome: true } },
               ticket: { select: { id: true } },
-            }
-          }
+            },
+          },
         },
         orderBy: { createdAt: "asc" },
       }),
     ]);
 
     const eventos = [
-      ...compras.map(c => ({
+      ...compras.map((c) => ({
         data: c.createdAt,
         tipo: "COMPRA" as const,
         valor: Number(c.valorTotal),
         descricao: `Compra - Ticket ${c.ticket.id}`,
         fornecedor: c.fornecedor.nome,
       })),
-      ...pagamentos.map(p => ({
+      ...pagamentos.map((p) => ({
         data: p.createdAt,
         tipo: "PAGAMENTO" as const,
-        valor: Number(p.valorPago),
+        valor: p.valorPago.toNumber(),
         descricao: `Pagamento - Ticket ${p.compra.ticket.id}`,
         fornecedor: p.compra.fornecedor.nome,
       })),
     ].sort((a, b) => a.data.getTime() - b.data.getTime());
 
     let saldoAcumulado = 0;
-    const fluxo = eventos.map(evento => {
+    const fluxo = eventos.map((evento) => {
       saldoAcumulado += evento.tipo === "COMPRA" ? evento.valor : -evento.valor;
       return { ...evento, saldoAcumulado };
     });
 
-    const totalCompras = compras.reduce((sum, c) => sum + Number(c.valorTotal), 0);
-    const totalPagamentos = pagamentos.reduce((sum, p) => sum + Number(p.valorPago), 0);
+    const totalCompras = compras.reduce(
+      (sum, c) => sum + c.valorTotal.toNumber(),
+      0
+    );
+    const totalPagamentos = pagamentos.reduce(
+      (sum, p) => sum + p.valorPago.toNumber(),
+      0
+    );
 
     return {
       fluxo,

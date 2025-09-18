@@ -27,8 +27,8 @@ export class TicketService extends BaseService {
       fornecedor: {
         connect: { id: data.fornecedorId },
       },
-      pesoBruto: data.pesoBruto,
-      pesoLiquido: data.pesoLiquido,
+      pesoBruto: new Prisma.Decimal(data.pesoBruto),
+      pesoLiquido: new Prisma.Decimal(data.pesoLiquido),
     };
 
     // Adicionar observacoes apenas se estiver definido
@@ -276,7 +276,7 @@ export class TicketService extends BaseService {
 
       // Calcular valores
       const precoPorArroba = precoPorKg * 15; // 1 arroba = 15 kg
-      const valorTotal = Number(ticket.pesoLiquido) * precoPorKg;
+      const valorTotal = ticket.pesoLiquido.toNumber() * precoPorKg;
 
       // Criar a compra
       const compra = await tx.compra.create({

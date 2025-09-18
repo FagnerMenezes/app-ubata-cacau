@@ -24,10 +24,6 @@ node_modules/
 # OS specific
 .DS_Store
 
-# Task files
-# tasks.json
-# tasks/ 
-
 # Node.js (backend)
 backend/node_modules/
 backend/.env
@@ -41,6 +37,7 @@ frontend/.env
 #Taskmaster
 .taskmaster/
 .trae/
+.cursor/
 .taskmaster/docs/
 .taskmaster/rules/
 .taskmaster/tasks/
@@ -50,3 +47,9 @@ frontend/.env
 .taskmaster/assets/
 .taskmaster/assets/env.example
 
+
+.env
+
+# Task files
+# tasks.json
+# tasks/ 

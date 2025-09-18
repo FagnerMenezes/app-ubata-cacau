@@ -58,7 +58,7 @@ export class TicketModel {
       if (ticket) {
         const pesoBruto = params.data.pesoBruto ?? ticket.pesoBruto;
         const tara = params.data.tara ?? ticket.pesoBruto;
-        params.data.pesoLiquido = Number(pesoBruto) - Number(tara);
+        params.data.pesoLiquido = pesoBruto.toNumber() - tara.toNumber();
       }
     }
 

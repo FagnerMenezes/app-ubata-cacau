@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { ResumoPagamento as ResumoPagamentoType } from "@/types/pagamento";
 import {
+  AlertCircle,
   CheckCircle,
   Clock,
   DollarSign,
   Plus,
-  AlertCircle,
 } from "lucide-react";
 
 interface ResumoPagamentoProps {
@@ -35,9 +35,13 @@ export function ResumoPagamento({
       PAGO: <CheckCircle className="h-3 w-3" />,
     };
 
+    type StatusPagamento = keyof typeof colors;
+
+    const statusKey = status as StatusPagamento;
+
     return (
-      <Badge className={colors[status] || "bg-gray-100 text-gray-800"}>
-        {icons[status]}
+      <Badge className={colors[statusKey] ?? "bg-gray-100 text-gray-800"}>
+        {icons[statusKey] ?? null}
         <span className="ml-1 capitalize">{status.toLowerCase()}</span>
       </Badge>
     );
@@ -70,10 +74,7 @@ export function ResumoPagamento({
                   {progressPercentage.toFixed(1)}%
                 </span>
               </div>
-              <Progress
-                value={progressPercentage}
-                className="h-3"
-              />
+              <Progress value={progressPercentage} className="h-3" />
             </div>
 
             {/* Valores */}
@@ -99,7 +100,11 @@ export function ResumoPagamento({
               </div>
 
               <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <div className={`text-2xl font-bold ${isPaid ? "text-green-600" : "text-orange-600"}`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    isPaid ? "text-green-600" : "text-orange-600"
+                  }`}
+                >
                   {new Intl.NumberFormat("pt-BR", {
                     style: "currency",
                     currency: "BRL",

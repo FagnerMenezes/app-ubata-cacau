@@ -204,7 +204,7 @@ export class FornecedorService extends BaseService {
       throw new CustomError("Fornecedor não encontrado", 404);
     }
 
-    return Number(fornecedor.saldo);
+    return fornecedor.saldo.toNumber();
   }
 
   static async updateSaldo(id: string, novoSaldo: number) {
@@ -213,7 +213,7 @@ export class FornecedorService extends BaseService {
         where: { id },
         data: { saldo: novoSaldo },
       });
-      return Number(fornecedor.saldo);
+      return fornecedor.saldo.toNumber();
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&

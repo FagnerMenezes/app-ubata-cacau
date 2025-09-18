@@ -90,7 +90,7 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/20 to-transparent rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent/20 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-accent/20  rounded-full blur-3xl"></div>
       </div>
 
       {/* Métricas principais com design moderno */}
@@ -106,7 +106,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
               2,350 kg
             </div>
             <p className="text-sm text-emerald-600 font-medium mt-1 flex items-center gap-1">
@@ -127,7 +127,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
               45
             </div>
             <p className="text-sm text-emerald-600 font-medium mt-1 flex items-center gap-1">
@@ -148,7 +148,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
               R$ 45.250
             </div>
             <p className="text-sm text-emerald-600 font-medium mt-1 flex items-center gap-1">
@@ -169,7 +169,7 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
               8.4/10
             </div>
             <p className="text-sm text-emerald-600 font-medium mt-1 flex items-center gap-1">
@@ -184,7 +184,7 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4 border-border/30 bg-gradient-to-br from-card/95 via-card/90 to-card/85 shadow-xl shadow-primary/5 backdrop-blur-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
               Produção e Qualidade Mensal
             </CardTitle>
             <CardDescription className="text-muted-foreground/80 font-medium">
@@ -246,7 +246,7 @@ export default function Dashboard() {
 
         <Card className="col-span-3 border-border/30 bg-gradient-to-br from-card/95 via-card/90 to-card/85 shadow-xl shadow-primary/5 backdrop-blur-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text ">
               Receita Semanal
             </CardTitle>
             <CardDescription className="text-muted-foreground/80 font-medium">
@@ -297,7 +297,7 @@ export default function Dashboard() {
         {/* Distribuição de Fornecedores */}
         <Card className="border-border/30 bg-gradient-to-br from-card/95 via-card/90 to-card/85 shadow-xl shadow-primary/5 backdrop-blur-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <CardTitle className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
               Fornecedores por Porte
             </CardTitle>
             <CardDescription className="text-muted-foreground/80 font-medium">
@@ -407,7 +407,7 @@ export default function Dashboard() {
       {/* Ações rápidas com design moderno */}
       <Card className="border-border/30 bg-gradient-to-br from-card/95 via-card/90 to-card/85 shadow-xl shadow-primary/5 backdrop-blur-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+          <CardTitle className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
             Ações Rápidas
           </CardTitle>
           <CardDescription className="text-muted-foreground/80 font-medium">

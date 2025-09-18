@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import {
   BarChart3,
+  DollarSign,
   Home,
   Package,
   Settings,
@@ -17,6 +18,7 @@ const navigation = [
   { name: "Fornecedores", href: "/fornecedores", icon: Users },
   { name: "Compras", href: "/compras", icon: ShoppingCart },
   { name: "Estoque", href: "/estoque", icon: Package },
+  { name: "Pagamentos", href: "/pagamentos", icon: DollarSign },
   { name: "Relatórios", href: "/relatorios", icon: BarChart3 },
   { name: "Configurações", href: "/configuracoes", icon: Settings },
 ];
@@ -57,27 +59,24 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="mt-8 px-3 ">
+      <nav className="mt-5 px-3 ">
         <ul className="space-y-3 ">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <li key={item.name}>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "group relative flex items-center justify-center rounded-2xl px-3 py-3.5 text-sm font-medium transition-all duration-300",
-                    "hover:bg-gradient-to-r hover:from-primary/15 hover:via-accent/10 hover:to-primary/15",
-                    "hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02]",
-                    "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 focus:ring-offset-background",
-                    isActive
-                      ? "bg-blue-500 text-white  "
-                      : "text-muted-foreground "
-                  )}
-                >
+              <li
+                key={item.name}
+                className={cn(
+                  "border rounded-lg flex items-center",
+                  isExpanded ? "justify-start" : "justify-center",
+                  isActive && "bg-blue-500 text-white"
+                )}
+              >
+                <Link to={item.href} className={cn("w-full h-full")}>
                   <div
                     className={cn(
-                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-all duration-300",
+                      "flex h-7 w-7 shrink-0 items-center rounded-xl transition-all duration-300",
+                      isExpanded ? "justify-start" : "justify-center",
                       isActive
                         ? "bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground shadow-lg shadow-primary/40"
                         : "group-hover:bg-gradient-to-br group-hover:from-primary/20 group-hover:to-accent/20 group-hover:text-primary group-hover:shadow-md group-hover:scale-110"

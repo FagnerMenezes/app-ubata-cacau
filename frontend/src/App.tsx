@@ -1,11 +1,12 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { QueryProvider } from './providers/QueryProvider'
-import { Toaster } from 'sonner'
-import Layout from './components/layout/Layout'
-import Dashboard from './pages/Dashboard'
-import Fornecedores from './pages/Fornecedores'
-import Compras from './pages/Compras'
-import Tickets from './pages/Tickets'
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { Toaster } from "sonner";
+import Layout from "./components/layout/Layout";
+import Compras from "./pages/Compras";
+import Dashboard from "./pages/Dashboard";
+import Fornecedores from "./pages/Fornecedores";
+import PagamentosPage from "./pages/Pagamentos";
+import Tickets from "./pages/Tickets";
+import { QueryProvider } from "./providers/QueryProvider";
 
 function App() {
   return (
@@ -17,20 +18,29 @@ function App() {
             <Route path="fornecedores" element={<Fornecedores />} />
             <Route path="compras" element={<Compras />} />
             <Route path="tickets" element={<Tickets />} />
-            <Route path="estoque" element={<div className="p-6">Estoque - Em desenvolvimento</div>} />
-            <Route path="relatorios" element={<div className="p-6">Relatórios - Em desenvolvimento</div>} />
-            <Route path="configuracoes" element={<div className="p-6">Configurações - Em desenvolvimento</div>} />
+            <Route
+              path="estoque"
+              element={<div className="p-6">Estoque - Em desenvolvimento</div>}
+            />
+            <Route path="pagamentos" element={<PagamentosPage />} />
+            <Route
+              path="relatorios"
+              element={
+                <div className="p-6">Relatórios - Em desenvolvimento</div>
+              }
+            />
+            <Route
+              path="configuracoes"
+              element={
+                <div className="p-6">Configurações - Em desenvolvimento</div>
+              }
+            />
           </Route>
         </Routes>
-        <Toaster 
-          position="top-right"
-          richColors
-          closeButton
-          duration={4000}
-        />
+        <Toaster position="top-right" richColors closeButton duration={4000} />
       </Router>
     </QueryProvider>
-  )
+  );
 }
 
-export default App
+export default App;
