@@ -5,6 +5,7 @@ Sistema completo para gestão de compra e venda de cacau, incluindo controle de 
 ## 🚀 Tecnologias
 
 ### Frontend
+
 - React 18 + Vite
 - TypeScript
 - Tailwind CSS
@@ -15,6 +16,7 @@ Sistema completo para gestão de compra e venda de cacau, incluindo controle de 
 - Zod
 
 ### Backend
+
 - Node.js + Express
 - TypeScript
 - PostgreSQL
@@ -24,6 +26,7 @@ Sistema completo para gestão de compra e venda de cacau, incluindo controle de 
 
 1. Clone o repositório
 2. Instale as dependências:
+
 ```bash
 npm run install:all
 ```
@@ -35,16 +38,19 @@ npm run install:all
 ## 🏃‍♂️ Execução
 
 ### Desenvolvimento (Frontend + Backend)
+
 ```bash
 npm run dev
 ```
 
 ### Apenas Frontend
+
 ```bash
 npm run dev:frontend
 ```
 
 ### Apenas Backend
+
 ```bash
 npm run dev:backend
 ```
@@ -65,4 +71,3 @@ npm run dev:backend
 - Módulo de Vendas
 - Relatórios Avançados
 - Sistema de Autenticação
-- Otimizações de Performance
