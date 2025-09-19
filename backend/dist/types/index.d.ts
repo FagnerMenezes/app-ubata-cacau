@@ -9,17 +9,17 @@ export declare const CreateFornecedorSchema: z.ZodObject<{
         cep: z.ZodString;
         complemento: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        rua: string;
-        cidade: string;
-        estado: string;
-        cep: string;
-        complemento?: string | undefined;
+        rua?: string;
+        cidade?: string;
+        estado?: string;
+        cep?: string;
+        complemento?: string;
     }, {
-        rua: string;
-        cidade: string;
-        estado: string;
-        cep: string;
-        complemento?: string | undefined;
+        rua?: string;
+        cidade?: string;
+        estado?: string;
+        cep?: string;
+        complemento?: string;
     }>>;
     contato: z.ZodOptional<z.ZodObject<{
         email: z.ZodOptional<z.ZodString>;
@@ -27,57 +27,57 @@ export declare const CreateFornecedorSchema: z.ZodObject<{
         whatsapp: z.ZodOptional<z.ZodString>;
         telefoneSecundario: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        email?: string | undefined;
-        telefone?: string | undefined;
-        whatsapp?: string | undefined;
-        telefoneSecundario?: string | undefined;
+        email?: string;
+        telefone?: string;
+        whatsapp?: string;
+        telefoneSecundario?: string;
     }, {
-        email?: string | undefined;
-        telefone?: string | undefined;
-        whatsapp?: string | undefined;
-        telefoneSecundario?: string | undefined;
+        email?: string;
+        telefone?: string;
+        whatsapp?: string;
+        telefoneSecundario?: string;
     }>>;
     fazenda: z.ZodOptional<z.ZodString>;
     observacoes: z.ZodOptional<z.ZodString>;
     saldo: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    nome: string;
-    documento: string;
+    nome?: string;
+    documento?: string;
     endereco?: {
-        rua: string;
-        cidade: string;
-        estado: string;
-        cep: string;
-        complemento?: string | undefined;
-    } | undefined;
+        rua?: string;
+        cidade?: string;
+        estado?: string;
+        cep?: string;
+        complemento?: string;
+    };
     contato?: {
-        email?: string | undefined;
-        telefone?: string | undefined;
-        whatsapp?: string | undefined;
-        telefoneSecundario?: string | undefined;
-    } | undefined;
-    fazenda?: string | undefined;
-    observacoes?: string | undefined;
-    saldo?: number | undefined;
+        email?: string;
+        telefone?: string;
+        whatsapp?: string;
+        telefoneSecundario?: string;
+    };
+    fazenda?: string;
+    observacoes?: string;
+    saldo?: number;
 }, {
-    nome: string;
-    documento: string;
+    nome?: string;
+    documento?: string;
     endereco?: {
-        rua: string;
-        cidade: string;
-        estado: string;
-        cep: string;
-        complemento?: string | undefined;
-    } | undefined;
+        rua?: string;
+        cidade?: string;
+        estado?: string;
+        cep?: string;
+        complemento?: string;
+    };
     contato?: {
-        email?: string | undefined;
-        telefone?: string | undefined;
-        whatsapp?: string | undefined;
-        telefoneSecundario?: string | undefined;
-    } | undefined;
-    fazenda?: string | undefined;
-    observacoes?: string | undefined;
-    saldo?: number | undefined;
+        email?: string;
+        telefone?: string;
+        whatsapp?: string;
+        telefoneSecundario?: string;
+    };
+    fazenda?: string;
+    observacoes?: string;
+    saldo?: number;
 }>;
 export declare const UpdateFornecedorSchema: z.ZodObject<{
     nome: z.ZodOptional<z.ZodString>;
@@ -89,17 +89,17 @@ export declare const UpdateFornecedorSchema: z.ZodObject<{
         cep: z.ZodString;
         complemento: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        rua: string;
-        cidade: string;
-        estado: string;
-        cep: string;
-        complemento?: string | undefined;
+        rua?: string;
+        cidade?: string;
+        estado?: string;
+        cep?: string;
+        complemento?: string;
     }, {
-        rua: string;
-        cidade: string;
-        estado: string;
-        cep: string;
-        complemento?: string | undefined;
+        rua?: string;
+        cidade?: string;
+        estado?: string;
+        cep?: string;
+        complemento?: string;
     }>>>;
     contato: z.ZodOptional<z.ZodOptional<z.ZodObject<{
         email: z.ZodOptional<z.ZodString>;
@@ -107,57 +107,57 @@ export declare const UpdateFornecedorSchema: z.ZodObject<{
         whatsapp: z.ZodOptional<z.ZodString>;
         telefoneSecundario: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        email?: string | undefined;
-        telefone?: string | undefined;
-        whatsapp?: string | undefined;
-        telefoneSecundario?: string | undefined;
+        email?: string;
+        telefone?: string;
+        whatsapp?: string;
+        telefoneSecundario?: string;
     }, {
-        email?: string | undefined;
-        telefone?: string | undefined;
-        whatsapp?: string | undefined;
-        telefoneSecundario?: string | undefined;
+        email?: string;
+        telefone?: string;
+        whatsapp?: string;
+        telefoneSecundario?: string;
     }>>>;
     fazenda: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     observacoes: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     saldo: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
 }, "strip", z.ZodTypeAny, {
-    nome?: string | undefined;
-    documento?: string | undefined;
+    nome?: string;
+    documento?: string;
     endereco?: {
-        rua: string;
-        cidade: string;
-        estado: string;
-        cep: string;
-        complemento?: string | undefined;
-    } | undefined;
+        rua?: string;
+        cidade?: string;
+        estado?: string;
+        cep?: string;
+        complemento?: string;
+    };
     contato?: {
-        email?: string | undefined;
-        telefone?: string | undefined;
-        whatsapp?: string | undefined;
-        telefoneSecundario?: string | undefined;
-    } | undefined;
-    fazenda?: string | undefined;
-    observacoes?: string | undefined;
-    saldo?: number | undefined;
+        email?: string;
+        telefone?: string;
+        whatsapp?: string;
+        telefoneSecundario?: string;
+    };
+    fazenda?: string;
+    observacoes?: string;
+    saldo?: number;
 }, {
-    nome?: string | undefined;
-    documento?: string | undefined;
+    nome?: string;
+    documento?: string;
     endereco?: {
-        rua: string;
-        cidade: string;
-        estado: string;
-        cep: string;
-        complemento?: string | undefined;
-    } | undefined;
+        rua?: string;
+        cidade?: string;
+        estado?: string;
+        cep?: string;
+        complemento?: string;
+    };
     contato?: {
-        email?: string | undefined;
-        telefone?: string | undefined;
-        whatsapp?: string | undefined;
-        telefoneSecundario?: string | undefined;
-    } | undefined;
-    fazenda?: string | undefined;
-    observacoes?: string | undefined;
-    saldo?: number | undefined;
+        email?: string;
+        telefone?: string;
+        whatsapp?: string;
+        telefoneSecundario?: string;
+    };
+    fazenda?: string;
+    observacoes?: string;
+    saldo?: number;
 }>;
 export declare const CreateTicketSchema: z.ZodObject<{
     fornecedorId: z.ZodString;
@@ -165,15 +165,15 @@ export declare const CreateTicketSchema: z.ZodObject<{
     pesoLiquido: z.ZodNumber;
     observacoes: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    fornecedorId: string;
-    pesoBruto: number;
-    pesoLiquido: number;
-    observacoes?: string | undefined;
+    observacoes?: string;
+    fornecedorId?: string;
+    pesoBruto?: number;
+    pesoLiquido?: number;
 }, {
-    fornecedorId: string;
-    pesoBruto: number;
-    pesoLiquido: number;
-    observacoes?: string | undefined;
+    observacoes?: string;
+    fornecedorId?: string;
+    pesoBruto?: number;
+    pesoLiquido?: number;
 }>;
 export declare const UpdateTicketSchema: z.ZodObject<{
     fornecedorId: z.ZodOptional<z.ZodString>;
@@ -181,28 +181,28 @@ export declare const UpdateTicketSchema: z.ZodObject<{
     pesoLiquido: z.ZodOptional<z.ZodNumber>;
     observacoes: z.ZodOptional<z.ZodOptional<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    observacoes?: string | undefined;
-    fornecedorId?: string | undefined;
-    pesoBruto?: number | undefined;
-    pesoLiquido?: number | undefined;
+    observacoes?: string;
+    fornecedorId?: string;
+    pesoBruto?: number;
+    pesoLiquido?: number;
 }, {
-    observacoes?: string | undefined;
-    fornecedorId?: string | undefined;
-    pesoBruto?: number | undefined;
-    pesoLiquido?: number | undefined;
+    observacoes?: string;
+    fornecedorId?: string;
+    pesoBruto?: number;
+    pesoLiquido?: number;
 }>;
 export declare const CreateCompraSchema: z.ZodObject<{
     ticketId: z.ZodString;
     precoPorArroba: z.ZodNumber;
     observacoes: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    ticketId: string;
-    precoPorArroba: number;
-    observacoes?: string | undefined;
+    observacoes?: string;
+    ticketId?: string;
+    precoPorArroba?: number;
 }, {
-    ticketId: string;
-    precoPorArroba: number;
-    observacoes?: string | undefined;
+    observacoes?: string;
+    ticketId?: string;
+    precoPorArroba?: number;
 }>;
 export declare const CreatePagamentoSchema: z.ZodObject<{
     compraId: z.ZodString;
@@ -210,25 +210,25 @@ export declare const CreatePagamentoSchema: z.ZodObject<{
     metodoPagamento: z.ZodOptional<z.ZodNullable<z.ZodEnum<["DINHEIRO", "PIX", "TRANSFERENCIA", "CHEQUE"]>>>;
     observacoes: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    compraId: string;
-    valorPago: number;
-    observacoes?: string | null | undefined;
-    metodoPagamento?: "DINHEIRO" | "PIX" | "TRANSFERENCIA" | "CHEQUE" | null | undefined;
+    observacoes?: string;
+    compraId?: string;
+    valorPago?: number;
+    metodoPagamento?: "DINHEIRO" | "PIX" | "TRANSFERENCIA" | "CHEQUE";
 }, {
-    compraId: string;
-    valorPago: number;
-    observacoes?: string | null | undefined;
-    metodoPagamento?: "DINHEIRO" | "PIX" | "TRANSFERENCIA" | "CHEQUE" | null | undefined;
+    observacoes?: string;
+    compraId?: string;
+    valorPago?: number;
+    metodoPagamento?: "DINHEIRO" | "PIX" | "TRANSFERENCIA" | "CHEQUE";
 }>;
 export declare const PaginationSchema: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
     limit: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    page: number;
-    limit: number;
+    page?: number;
+    limit?: number;
 }, {
-    page?: number | undefined;
-    limit?: number | undefined;
+    page?: number;
+    limit?: number;
 }>;
 export declare const FornecedorQuerySchema: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
@@ -237,15 +237,15 @@ export declare const FornecedorQuerySchema: z.ZodObject<{
     nome: z.ZodOptional<z.ZodString>;
     documento: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    page: number;
-    limit: number;
-    nome?: string | undefined;
-    documento?: string | undefined;
+    nome?: string;
+    documento?: string;
+    page?: number;
+    limit?: number;
 }, {
-    nome?: string | undefined;
-    documento?: string | undefined;
-    page?: number | undefined;
-    limit?: number | undefined;
+    nome?: string;
+    documento?: string;
+    page?: number;
+    limit?: number;
 }>;
 export declare const TicketQuerySchema: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
@@ -256,19 +256,19 @@ export declare const TicketQuerySchema: z.ZodObject<{
     dataInicio: z.ZodOptional<z.ZodString>;
     dataFim: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    page: number;
-    limit: number;
-    status?: "PENDENTE" | "CONVERTIDO" | undefined;
-    fornecedorId?: string | undefined;
-    dataInicio?: string | undefined;
-    dataFim?: string | undefined;
+    status?: "PENDENTE" | "CONVERTIDO";
+    fornecedorId?: string;
+    page?: number;
+    limit?: number;
+    dataInicio?: string;
+    dataFim?: string;
 }, {
-    status?: "PENDENTE" | "CONVERTIDO" | undefined;
-    fornecedorId?: string | undefined;
-    page?: number | undefined;
-    limit?: number | undefined;
-    dataInicio?: string | undefined;
-    dataFim?: string | undefined;
+    status?: "PENDENTE" | "CONVERTIDO";
+    fornecedorId?: string;
+    page?: number;
+    limit?: number;
+    dataInicio?: string;
+    dataFim?: string;
 }>;
 export declare const CompraQuerySchema: z.ZodObject<{
     page: z.ZodDefault<z.ZodNumber>;
@@ -279,19 +279,19 @@ export declare const CompraQuerySchema: z.ZodObject<{
     dataInicio: z.ZodOptional<z.ZodString>;
     dataFim: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    page: number;
-    limit: number;
-    fornecedorId?: string | undefined;
-    dataInicio?: string | undefined;
-    dataFim?: string | undefined;
-    statusPagamento?: "PENDENTE" | "PARCIAL" | "PAGO" | undefined;
+    fornecedorId?: string;
+    page?: number;
+    limit?: number;
+    dataInicio?: string;
+    dataFim?: string;
+    statusPagamento?: "PENDENTE" | "PARCIAL" | "PAGO";
 }, {
-    fornecedorId?: string | undefined;
-    page?: number | undefined;
-    limit?: number | undefined;
-    dataInicio?: string | undefined;
-    dataFim?: string | undefined;
-    statusPagamento?: "PENDENTE" | "PARCIAL" | "PAGO" | undefined;
+    fornecedorId?: string;
+    page?: number;
+    limit?: number;
+    dataInicio?: string;
+    dataFim?: string;
+    statusPagamento?: "PENDENTE" | "PARCIAL" | "PAGO";
 }>;
 export declare const RelatorioQuerySchema: z.ZodObject<{
     dataInicio: z.ZodOptional<z.ZodString>;
@@ -300,27 +300,27 @@ export declare const RelatorioQuerySchema: z.ZodObject<{
     statusPagamento: z.ZodOptional<z.ZodEnum<["PENDENTE", "PARCIAL", "PAGO"]>>;
     formato: z.ZodDefault<z.ZodEnum<["json", "csv", "pdf"]>>;
 }, "strip", z.ZodTypeAny, {
-    formato: "json" | "csv" | "pdf";
-    fornecedorId?: string | undefined;
-    dataInicio?: string | undefined;
-    dataFim?: string | undefined;
-    statusPagamento?: "PENDENTE" | "PARCIAL" | "PAGO" | undefined;
+    fornecedorId?: string;
+    dataInicio?: string;
+    dataFim?: string;
+    statusPagamento?: "PENDENTE" | "PARCIAL" | "PAGO";
+    formato?: "json" | "csv" | "pdf";
 }, {
-    fornecedorId?: string | undefined;
-    dataInicio?: string | undefined;
-    dataFim?: string | undefined;
-    statusPagamento?: "PENDENTE" | "PARCIAL" | "PAGO" | undefined;
-    formato?: "json" | "csv" | "pdf" | undefined;
+    fornecedorId?: string;
+    dataInicio?: string;
+    dataFim?: string;
+    statusPagamento?: "PENDENTE" | "PARCIAL" | "PAGO";
+    formato?: "json" | "csv" | "pdf";
 }>;
 export declare const ParamsIdSchema: z.ZodObject<{
     id: z.ZodString;
     precokg: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    id: string;
-    precokg?: number | undefined;
+    id?: string;
+    precokg?: number;
 }, {
-    id: string;
-    precokg?: number | undefined;
+    id?: string;
+    precokg?: number;
 }>;
 export type CreateFornecedorInput = z.infer<typeof CreateFornecedorSchema>;
 export type UpdateFornecedorInput = z.infer<typeof UpdateFornecedorSchema>;

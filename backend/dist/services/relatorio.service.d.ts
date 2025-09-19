@@ -185,22 +185,22 @@ export declare class RelatorioService {
                 saldo: number;
             }[];
             totais: {
-                credito: number;
-                debito: number;
+                credito: any;
+                debito: any;
                 saldo: number;
             };
         };
         movimentacaoFinanceira: {
             movimentacoes: {
-                data: string;
-                historico: string;
-                credito: number;
-                debito: number;
-                saldo: number;
+                data: any;
+                historico: any;
+                credito: any;
+                debito: any;
+                saldo: any;
             }[];
             totais: {
-                credito: number;
-                debito: number;
+                credito: any;
+                debito: any;
                 saldo: number;
             };
         };
@@ -212,8 +212,8 @@ export declare class RelatorioService {
             };
             financeiro: {
                 saldo: number;
-                totalCompras: number;
-                totalPagamentos: number;
+                totalCompras: any;
+                totalPagamentos: any;
             };
         };
     }>;

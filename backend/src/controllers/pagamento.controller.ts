@@ -28,8 +28,7 @@ export class PagamentoController {
   static async findAll(req: Request, res: Response) {
     try {
       const params = paginationSchema.parse(req.query);
-      //@ts-expect-error err
-      const resultado = await PagamentoService.listarPagamentos(params);
+      const resultado = await PagamentoService.listarPagamentos(params as any);
 
       return res.json(resultado);
     } catch (error) {

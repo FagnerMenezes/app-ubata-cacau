@@ -538,8 +538,7 @@ class RelatorioService {
             (compras || []).forEach((compra) => {
                 const pesoLiquido = Array.isArray(compra.ticket)
                     ? compra.ticket[0]?.pesoLiquido || 0
-                    :
-                        compra.ticket?.pesoLiquido || 0;
+                    : compra.ticket?.pesoLiquido || 0;
                 if (pesoLiquido > 0) {
                     const valorPorKg = Number(compra.precoPorKg);
                     eventosCacau.push({

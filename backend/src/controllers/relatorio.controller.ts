@@ -224,7 +224,7 @@ export class RelatorioController {
   static async relatorioUnificadoFornecedor(req: Request, res: Response) {
     try {
       const params = relatorioUnificadoFornecedorSchema.parse(req.query);
-      const relatorio = await RelatorioService.relatorioUnificadoFornecedor(params);
+      const relatorio = await RelatorioService.relatorioUnificadoFornecedor(params as any);
 
       if (params.formato === "pdf") {
         RelatorioController.setDownloadHeaders(
