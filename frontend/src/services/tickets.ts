@@ -24,31 +24,36 @@ export const ticketsService = {
     const response = await apiClient.get<TicketResponse>(
       `/tickets?${params.toString()}`
     );
-    return response.data;
+    //@ts-expect-error err
+    return response?.data || response?.data.data;
   },
 
   // Buscar ticket por ID
   async getById(id: string): Promise<Ticket> {
     const response = await apiClient.get<Ticket>(`/tickets/${id}`);
-    return response.data.data;
+    //@ts-expect-error err
+    return response?.data || response?.data.data;
   },
 
   // Buscar tickets disponíveis para compra (status PENDENTE)
   async getAvailableForPurchase(): Promise<Ticket[]> {
     const response = await apiClient.get<Ticket[]>("/tickets/available");
-    return response.data.data || response.data;
+    //@ts-expect-error err
+    return response?.data || response?.data.data;
   },
 
   // Criar novo ticket
   async create(data: CreateTicketInput): Promise<Ticket> {
     const response = await apiClient.post<Ticket>("/tickets", data);
-    return response.data.data;
+    //@ts-expect-error err
+    return response?.data || response?.data.data;
   },
 
   // Atualizar ticket
   async update(id: string, data: UpdateTicketInput): Promise<Ticket> {
     const response = await apiClient.put<Ticket>(`/tickets/${id}`, data);
-    return response.data.data;
+    //@ts-expect-error err
+    return response?.data || response?.data.data;
   },
 
   // Deletar ticket
@@ -68,7 +73,8 @@ export const ticketsService = {
       `/tickets/${ticketId}/convert`,
       compraData
     );
-    return response.data.data;
+    //@ts-expect-error err
+    return response?.data || response?.data.data;
   },
 
   // Buscar tickets por fornecedor
@@ -89,13 +95,15 @@ export const ticketsService = {
     const response = await apiClient.get<TicketResponse>(
       `/fornecedores/${fornecedorId}/tickets?${params.toString()}`
     );
-    return response.data;
+    //@ts-expect-error err
+    return response?.data || response?.data.data;
   },
 
   // Estatísticas de tickets
   async getStats(fornecedorId?: string) {
     const params = fornecedorId ? `?fornecedorId=${fornecedorId}` : "";
     const response = await apiClient.get(`/tickets/stats${params}`);
-    return response.data.data;
+
+    return response?.data || response?.data.data;
   },
 };

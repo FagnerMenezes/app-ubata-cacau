@@ -1,10 +1,13 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 import Compras from "./pages/Compras";
 import Dashboard from "./pages/Dashboard";
 import Fornecedores from "./pages/Fornecedores";
+import Login from "./pages/Login";
 import PagamentosPage from "./pages/Pagamentos";
+import Relatorios from "./pages/Relatorios";
 import Tickets from "./pages/Tickets";
 import { QueryProvider } from "./providers/QueryProvider";
 
@@ -13,26 +16,70 @@ function App() {
     <QueryProvider>
       <Router>
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="fornecedores" element={<Fornecedores />} />
-            <Route path="compras" element={<Compras />} />
-            <Route path="tickets" element={<Tickets />} />
+            <Route
+              index
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="fornecedores"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <Fornecedores />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="compras"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <Compras />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="tickets"
+              element={
+                <ProtectedRoute>
+                  <Tickets />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="estoque"
-              element={<div className="p-6">Estoque - Em desenvolvimento</div>}
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <div className="p-6">Estoque - Em desenvolvimento</div>
+                </ProtectedRoute>
+              }
             />
-            <Route path="pagamentos" element={<PagamentosPage />} />
+            <Route
+              path="pagamentos"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <PagamentosPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="relatorios"
               element={
-                <div className="p-6">Relatórios - Em desenvolvimento</div>
+                <ProtectedRoute requiredRole="ADMIN">
+                  <Relatorios />
+                </ProtectedRoute>
               }
             />
             <Route
               path="configuracoes"
               element={
-                <div className="p-6">Configurações - Em desenvolvimento</div>
+                <ProtectedRoute requiredRole="ADMIN">
+                  <div className="p-6">Configurações - Em desenvolvimento</div>
+                </ProtectedRoute>
               }
             />
           </Route>

@@ -37,7 +37,7 @@ import {
   useConfirmarCompra,
   useCreateCompra,
   useDeleteCompra,
-  useMarcarEntregue,
+  // useMarcarEntregue,
   useUpdateCompra,
 } from "@/hooks/useCompras";
 import { useAvailableTickets } from "@/hooks/useTickets";
@@ -57,16 +57,16 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 
 export default function Compras() {
-  const [searchTerm, setSearchTerm] = useState("");
-  //eslint-disable-next-line
-  const [statusFilter, setStatusFilter] = useState<string>("todos");
+  const [searchTerm] = useState("");
+  const [statusFilter] = useState<string>("todos");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCompra, setSelectedCompra] = useState<Compra | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [compraToDelete, setCompraToDelete] = useState<string | null>(null);
   const [pagamentosModalOpen, setPagamentosModalOpen] = useState(false);
-  const [selectedCompraForPayments, setSelectedCompraForPayments] = useState<Compra | null>(null);
+  const [selectedCompraForPayments, setSelectedCompraForPayments] =
+    useState<Compra | null>(null);
 
   // Hooks para gerenciar dados
   const {
@@ -85,11 +85,13 @@ export default function Compras() {
   const updateCompraMutation = useUpdateCompra();
   const deleteCompraMutation = useDeleteCompra();
   const confirmarCompraMutation = useConfirmarCompra();
-  const marcarEntregueMutation = useMarcarEntregue();
   const cancelarCompraMutation = useCancelarCompra();
   //@ts-expect-error err
   const compras = comprasData?.compras || [];
-  const tickets = ticketsData || [];
+  const tickets = Array.isArray(ticketsData)
+    ? ticketsData
+    : //@ts-expect-error err
+      (ticketsData && ticketsData?.data) || [];
   const isLoading = comprasLoading || ticketsLoading;
 
   // Funções de manipulação
@@ -147,14 +149,6 @@ export default function Compras() {
       await confirmarCompraMutation.mutateAsync(id);
     } catch (error) {
       console.error("Erro ao confirmar compra:", error);
-    }
-  };
-
-  const handleMarcarEntregue = async (id: string) => {
-    try {
-      await marcarEntregueMutation.mutateAsync({ id });
-    } catch (error) {
-      console.error("Erro ao marcar como entregue:", error);
     }
   };
 
@@ -517,33 +511,39 @@ function CompraFormModal({
   const [pesoMaximo, setPesoMaximo] = useState("");
 
   // Se estamos editando, usar dados da compra; senão buscar no tickets disponíveis
-  const selectedTicket = compra?.ticket || tickets.find((t) => t.id === formData.ticketId);
+  const selectedTicket =
+    compra?.ticket ||
+    (Array.isArray(tickets)
+      ? tickets.find((t) => t.id === formData.ticketId)
+      : undefined);
   const precoPorKg = formData.precoPorArroba / 15; // 1 arroba = 15 kg
   const valorTotal = selectedTicket
     ? Number(selectedTicket.pesoLiquido) * precoPorKg
     : 0;
 
   // Filtrar tickets baseado no texto de busca e status
-  const filteredTickets = tickets.filter((ticket) => {
-    const matchesText =
-      ticket.fornecedor?.nome
-        .toLowerCase()
-        .includes(ticketFilter.toLowerCase()) ||
-      ticket.id.toLowerCase().includes(ticketFilter.toLowerCase()) ||
-      ticket.fornecedor?.documento
-        ?.toLowerCase()
-        .includes(ticketFilter.toLowerCase());
+  const filteredTickets = Array.isArray(tickets)
+    ? tickets.filter((ticket) => {
+        const matchesText =
+          ticket.fornecedor?.nome
+            .toLowerCase()
+            .includes(ticketFilter.toLowerCase()) ||
+          ticket.id.toLowerCase().includes(ticketFilter.toLowerCase()) ||
+          ticket.fornecedor?.documento
+            ?.toLowerCase()
+            .includes(ticketFilter.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "ALL" || ticket.status === statusFilter;
+        const matchesStatus =
+          statusFilter === "ALL" || ticket.status === statusFilter;
 
-    // Filtro por peso
-    const peso = Number(ticket.pesoLiquido);
-    const matchesPesoMin = !pesoMinimo || peso >= Number(pesoMinimo);
-    const matchesPesoMax = !pesoMaximo || peso <= Number(pesoMaximo);
+        // Filtro por peso
+        const peso = Number(ticket.pesoLiquido);
+        const matchesPesoMin = !pesoMinimo || peso >= Number(pesoMinimo);
+        const matchesPesoMax = !pesoMaximo || peso <= Number(pesoMaximo);
 
-    return matchesText && matchesStatus && matchesPesoMin && matchesPesoMax;
-  });
+        return matchesText && matchesStatus && matchesPesoMin && matchesPesoMax;
+      })
+    : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -587,7 +587,9 @@ function CompraFormModal({
             {/* Filtros para tickets - apenas no modo de criação */}
             {!compra && (
               <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
-                <Label className="text-sm font-medium">Filtros de Tickets</Label>
+                <Label className="text-sm font-medium">
+                  Filtros de Tickets
+                </Label>
                 <div className="flex gap-3">
                   <div className="flex-1">
                     <Input
@@ -666,7 +668,8 @@ function CompraFormModal({
                   )}
 
                 <div className="text-xs text-gray-500">
-                  {filteredTickets.length} de {tickets.length} tickets encontrados
+                  {filteredTickets.length} de {tickets.length} tickets
+                  encontrados
                 </div>
               </div>
             )}
@@ -682,7 +685,8 @@ function CompraFormModal({
                         {compra.fornecedor?.nome || "Fornecedor não informado"}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Peso: {Number(compra.ticket?.pesoLiquido || 0).toFixed(3)}kg
+                        Peso:{" "}
+                        {Number(compra.ticket?.pesoLiquido || 0).toFixed(3)}kg
                       </p>
                       <p className="text-xs text-gray-500">
                         ID: {compra.ticket?.id?.slice(0, 8)}...
@@ -743,7 +747,9 @@ function CompraFormModal({
                 <Input
                   id="precoPorKg"
                   type="text"
-                  value={precoPorKg > 0 ? `R$ ${precoPorKg.toFixed(2)}` : "R$ 0,00"}
+                  value={
+                    precoPorKg > 0 ? `R$ ${precoPorKg.toFixed(2)}` : "R$ 0,00"
+                  }
                   disabled
                   className="bg-gray-50 text-gray-600"
                 />

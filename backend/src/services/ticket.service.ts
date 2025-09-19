@@ -1,14 +1,23 @@
-import { Prisma } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
+import supabase from "../lib/supabase";
 import { CustomError } from "../middleware/error.middleware";
 import { CreateTicketInput, TicketQuery, UpdateTicketInput } from "../types";
-import { BaseService } from "./base.service";
 
-export class TicketService extends BaseService {
+export class TicketService {
   static async create(data: CreateTicketInput) {
     // Verificar se o fornecedor existe
-    const fornecedor = await this.prisma.fornecedor.findUnique({
-      where: { id: data.fornecedorId },
-    });
+    const { data: fornecedor, error: fornecedorError } = await supabase
+      .from("fornecedores")
+      .select("*")
+      .eq("id", data.fornecedorId)
+      .single();
+
+    if (fornecedorError) {
+      if (fornecedorError.code === "PGRST116") {
+        throw new CustomError("Fornecedor não encontrado", 404);
+      }
+      throw new CustomError("Erro ao buscar fornecedor", 500);
+    }
 
     if (!fornecedor) {
       throw new CustomError("Fornecedor não encontrado", 404);
@@ -22,141 +31,211 @@ export class TicketService extends BaseService {
       );
     }
 
-    // Criar objeto apenas com propriedades definidas
-    const createData: Prisma.TicketCreateInput = {
-      fornecedor: {
-        connect: { id: data.fornecedorId },
-      },
-      pesoBruto: new Prisma.Decimal(data.pesoBruto),
-      pesoLiquido: new Prisma.Decimal(data.pesoLiquido),
+    // Criar ticket
+    const now = new Date().toISOString();
+    const ticketData = {
+      id: uuidv4(), // Gerar ID manualmente
+      createdAt: now, // Definir data de criação
+      updatedAt: now, // Definir data de atualização
+      ...data,
     };
 
-    // Adicionar observacoes apenas se estiver definido
-    if (data.observacoes !== undefined) {
-      createData.observacoes = data.observacoes;
+    const { data: ticket, error: createError } = await supabase
+      .from("tickets")
+      .insert([ticketData])
+      .select(
+        `
+        *,
+        fornecedor:fornecedores(
+          id,
+          nome,
+          documento
+        )
+      `
+      )
+      .single();
+
+    if (createError) {
+      throw new CustomError("Erro ao criar ticket", 500);
     }
 
-    return await this.prisma.ticket.create({
-      data: createData,
-      include: {
-        fornecedor: {
-          select: {
-            id: true,
-            nome: true,
-            documento: true,
-          },
-        },
-      },
-    });
+    return ticket;
   }
 
   static async findAll(query: TicketQuery) {
     const { page, limit, fornecedorId, status, dataInicio, dataFim } = query;
-    const { skip, take } = this.getPaginationParams(page, limit);
+    const skip = (page - 1) * limit;
+    const take = limit;
 
-    const where: Prisma.TicketWhereInput = {};
+    // Construir query base
+    let queryBuilder = supabase
+      .from("tickets")
+      .select(
+        `
+        *,
+        fornecedor:fornecedores(
+          id,
+          nome,
+          documento
+        ),
+        compra:compras(
+          id,
+          valorTotal,
+          precoPorKg,
+          statusPagamento
+        )
+      `
+      )
+      .order("createdAt", { ascending: false })
+      .range(skip, skip + take - 1);
 
+    // Aplicar filtros
     if (fornecedorId) {
-      where.fornecedorId = fornecedorId;
+      queryBuilder = queryBuilder.eq("fornecedorId", fornecedorId);
     }
 
     if (status) {
-      where.status = status;
+      queryBuilder = queryBuilder.eq("status", status);
     }
 
-    if (dataInicio || dataFim) {
-      where.createdAt = {};
-      if (dataInicio) {
-        where.createdAt.gte = new Date(dataInicio);
-      }
-      if (dataFim) {
-        where.createdAt.lte = new Date(dataFim);
-      }
+    if (dataInicio) {
+      queryBuilder = queryBuilder.gte("createdAt", dataInicio);
     }
 
-    const [tickets, total] = await Promise.all([
-      this.prisma.ticket.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { createdAt: "desc" },
-        include: {
-          fornecedor: {
-            select: {
-              id: true,
-              nome: true,
-              documento: true,
-            },
-          },
-          compra: {
-            select: {
-              id: true,
-              valorTotal: true,
-              precoPorKg: true,
-              statusPagamento: true,
-            },
-          },
-        },
-      }),
-      this.prisma.ticket.count({ where }),
-    ]);
+    if (dataFim) {
+      queryBuilder = queryBuilder.lte("createdAt", dataFim);
+    }
+
+    const { data: tickets, error: ticketsError } = await queryBuilder;
+
+    if (ticketsError) {
+      throw new CustomError("Erro ao buscar tickets", 500);
+    }
+
+    // Contar total para paginação
+    let countQuery = supabase
+      .from("tickets")
+      .select("*", { count: "exact", head: true });
+
+    if (fornecedorId) {
+      countQuery = countQuery.eq("fornecedorId", fornecedorId);
+    }
+
+    if (status) {
+      countQuery = countQuery.eq("status", status);
+    }
+
+    if (dataInicio) {
+      countQuery = countQuery.gte("createdAt", dataInicio);
+    }
+
+    if (dataFim) {
+      countQuery = countQuery.lte("createdAt", dataFim);
+    }
+
+    const { count: total, error: countError } = await countQuery;
+
+    if (countError) {
+      throw new CustomError("Erro ao contar tickets", 500);
+    }
 
     return {
-      data: tickets,
-      pagination: this.calculatePagination(page, limit, total),
+      data: tickets || [],
+      pagination: {
+        page,
+        limit,
+        total: total || 0,
+        totalPages: Math.ceil((total || 0) / limit),
+      },
     };
   }
 
   static async findAvailable() {
-    return await this.prisma.ticket.findMany({
-      where: {
-        status: "PENDENTE",
-        compra: null, // Tickets que não foram convertidos em compra
-      },
-      orderBy: { createdAt: "desc" },
-      include: {
-        fornecedor: {
-          select: {
-            id: true,
-            nome: true,
-            documento: true,
-          },
-        },
-      },
-    });
+    const { data: tickets, error: ticketsError } = await supabase
+      .from("tickets")
+      .select(
+        `
+        *,
+        fornecedor:fornecedores(
+          id,
+          nome,
+          documento
+        ),
+        compras(id)
+      `
+      )
+      .eq("status", "PENDENTE")
+      .order("createdAt", { ascending: false });
+
+    if (ticketsError) {
+      console.error("Erro na query findAvailable:", ticketsError);
+      throw new CustomError("Erro ao buscar tickets disponíveis", 500);
+    }
+
+    // Filtrar tickets que não têm compra associada
+    const availableTickets = tickets?.filter(ticket => {
+      return !ticket.compras || ticket.compras.length === 0;
+    }) || [];
+
+    return availableTickets;
   }
 
   static async findById(id: string) {
-    const ticket = await this.prisma.ticket.findUnique({
-      where: { id },
-      include: {
-        fornecedor: {
-          select: {
-            id: true,
-            nome: true,
-            documento: true,
-          },
-        },
-        compra: {
-          include: {
-            pagamentos: {
-              orderBy: { createdAt: "desc" },
-            },
-          },
-        },
-      },
-    });
+    const { data: ticket, error: ticketError } = await supabase
+      .from("tickets")
+      .select(
+        `
+        *,
+        fornecedor:fornecedores(
+          id,
+          nome,
+          documento
+        ),
+        compra:compras(
+          *,
+          pagamentos(
+            *
+          )
+        )
+      `
+      )
+      .eq("id", id)
+      .single();
 
-    return this.handleNotFound(ticket, "Ticket", id);
+    if (ticketError) {
+      if (ticketError.code === "PGRST116") {
+        throw new CustomError("Ticket não encontrado", 404);
+      }
+      throw new CustomError("Erro ao buscar ticket", 500);
+    }
+
+    if (!ticket) {
+      throw new CustomError("Ticket não encontrado", 404);
+    }
+
+    return ticket;
   }
 
   static async update(id: string, data: UpdateTicketInput) {
     try {
       // Verificar se o ticket existe e não foi convertido
-      const ticketExistente = await this.prisma.ticket.findUnique({
-        where: { id },
-        include: { compra: true },
-      });
+      const { data: ticketExistente, error: findError } = await supabase
+        .from("tickets")
+        .select(
+          `
+          *,
+          compra:compras(id)
+        `
+        )
+        .eq("id", id)
+        .single();
+
+      if (findError) {
+        if (findError.code === "PGRST116") {
+          throw new CustomError("Ticket não encontrado", 404);
+        }
+        throw new CustomError("Erro ao buscar ticket", 500);
+      }
 
       if (!ticketExistente) {
         throw new CustomError("Ticket não encontrado", 404);
@@ -175,9 +254,9 @@ export class TicketService extends BaseService {
       }
 
       // Validar pesos se fornecidos
-      const pesoBruto = data.pesoBruto ?? Number(ticketExistente.pesoBruto);
+      const pesoBruto = data.pesoBruto ?? parseFloat(ticketExistente.pesoBruto);
       const pesoLiquido =
-        data.pesoLiquido ?? Number(ticketExistente.pesoLiquido);
+        data.pesoLiquido ?? parseFloat(ticketExistente.pesoLiquido);
 
       if (pesoLiquido > pesoBruto) {
         throw new CustomError(
@@ -197,29 +276,39 @@ export class TicketService extends BaseService {
         );
       }
 
-      const ticket = await this.prisma.ticket.update({
-        where: { id },
-        // Adicionar verificação se fornecedorId está sendo atualizado
-        // @ts-expect-error err
-        data: updateData,
-        include: {
-          fornecedor: {
-            select: {
-              id: true,
-              nome: true,
-              documento: true,
-            },
-          },
-        },
-      });
+      // Adicionar updatedAt ao updateData
+      const updateDataWithTimestamp = {
+        ...updateData,
+        updatedAt: new Date().toISOString(),
+      };
+
+      const { data: ticket, error: updateError } = await supabase
+        .from("tickets")
+        .update(updateDataWithTimestamp)
+        .eq("id", id)
+        .select(
+          `
+          *,
+          fornecedor:fornecedores(
+            id,
+            nome,
+            documento
+          )
+        `
+        )
+        .single();
+
+      if (updateError) {
+        if (updateError.code === "PGRST116") {
+          throw new CustomError("Ticket não encontrado", 404);
+        }
+        throw new CustomError("Erro ao atualizar ticket", 500);
+      }
 
       return ticket;
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2025"
-      ) {
-        throw new CustomError("Ticket não encontrado", 404);
+      if (error instanceof CustomError) {
+        throw error;
       }
       throw error;
     }
@@ -228,10 +317,23 @@ export class TicketService extends BaseService {
   static async delete(id: string) {
     try {
       // Verificar se o ticket existe e não foi convertido
-      const ticket = await this.prisma.ticket.findUnique({
-        where: { id },
-        include: { compra: true },
-      });
+      const { data: ticket, error: findError } = await supabase
+        .from("tickets")
+        .select(
+          `
+          *,
+          compra:compras(id)
+        `
+        )
+        .eq("id", id)
+        .single();
+
+      if (findError) {
+        if (findError.code === "PGRST116") {
+          throw new CustomError("Ticket não encontrado", 404);
+        }
+        throw new CustomError("Erro ao buscar ticket", 500);
+      }
 
       if (!ticket) {
         throw new CustomError("Ticket não encontrado", 404);
@@ -244,27 +346,45 @@ export class TicketService extends BaseService {
         );
       }
 
-      await this.prisma.ticket.delete({
-        where: { id },
-      });
+      const { error: deleteError } = await supabase
+        .from("tickets")
+        .delete()
+        .eq("id", id);
+
+      if (deleteError) {
+        if (deleteError.code === "PGRST116") {
+          throw new CustomError("Ticket não encontrado", 404);
+        }
+        throw new CustomError("Erro ao excluir ticket", 500);
+      }
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2025"
-      ) {
-        throw new CustomError("Ticket não encontrado", 404);
+      if (error instanceof CustomError) {
+        throw error;
       }
       throw error;
     }
   }
 
   static async convertToCompra(ticketId: string, precoPorKg: number) {
-    return await this.prisma.$transaction(async (tx) => {
+    try {
       // Buscar o ticket
-      const ticket = await tx.ticket.findUnique({
-        where: { id: ticketId },
-        include: { compra: true },
-      });
+      const { data: ticket, error: ticketError } = await supabase
+        .from("tickets")
+        .select(
+          `
+          *,
+          compra:compras(id)
+        `
+        )
+        .eq("id", ticketId)
+        .single();
+
+      if (ticketError) {
+        if (ticketError.code === "PGRST116") {
+          throw new CustomError("Ticket não encontrado", 404);
+        }
+        throw new CustomError("Erro ao buscar ticket", 500);
+      }
 
       if (!ticket) {
         throw new CustomError("Ticket não encontrado", 404);
@@ -276,36 +396,70 @@ export class TicketService extends BaseService {
 
       // Calcular valores
       const precoPorArroba = precoPorKg * 15; // 1 arroba = 15 kg
-      const valorTotal = ticket.pesoLiquido.toNumber() * precoPorKg;
+      const valorTotal = parseFloat(ticket.pesoLiquido) * precoPorKg;
 
       // Criar a compra
-      const compra = await tx.compra.create({
-        data: {
-          ticketId: ticket.id,
-          fornecedorId: ticket.fornecedorId,
-          precoPorArroba,
-          precoPorKg,
-          valorTotal,
-        },
-        include: {
-          ticket: true,
-          fornecedor: {
-            select: {
-              id: true,
-              nome: true,
-              documento: true,
-            },
+      const { data: compra, error: compraError } = await supabase
+        .from("compras")
+        .insert([
+          {
+            ticketId: ticket.id,
+            fornecedorId: ticket.fornecedorId,
+            precoPorArroba,
+            precoPorKg,
+            valorTotal,
           },
-        },
-      });
+        ])
+        .select(
+          `
+          *,
+          ticket:tickets(*),
+          fornecedor:fornecedores(
+            id,
+            nome,
+            documento
+          )
+        `
+        )
+        .single();
+
+      if (compraError) {
+        throw new CustomError("Erro ao criar compra", 500);
+      }
 
       // Atualizar status do ticket
-      await tx.ticket.update({
-        where: { id: ticketId },
-        data: { status: "CONVERTIDO" },
-      });
+      const { error: updateError } = await supabase
+        .from("tickets")
+        .update({ status: "CONVERTIDO" })
+        .eq("id", ticketId);
+
+      if (updateError) {
+        throw new CustomError("Erro ao atualizar status do ticket", 500);
+      }
 
       return compra;
-    });
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Remove propriedades undefined de um objeto para compatibilidade com exactOptionalPropertyTypes
+   */
+  private static removeUndefinedProperties<T extends Record<string, any>>(
+    obj: T
+  ): Partial<T> {
+    const result: Partial<T> = {};
+
+    for (const key in obj) {
+      if (obj[key] !== undefined) {
+        result[key] = obj[key];
+      }
+    }
+
+    return result;
   }
 }

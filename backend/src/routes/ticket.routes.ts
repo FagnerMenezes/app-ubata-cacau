@@ -1,22 +1,19 @@
 import { Router } from "express";
 import { TicketController } from "../controllers/ticket.controller";
+import { authenticateToken } from "../middleware/auth.middleware";
+import { requireModuleAccess } from "../middleware/permissions.middleware";
 
 const router = Router();
+
+// Aplicar autenticação e permissões em todas as rotas
+router.use(authenticateToken);
+router.use(requireModuleAccess("tickets"));
 
 // GET /api/tickets - Listar tickets
 router.get("/", TicketController.findAll);
 
 // GET /api/tickets/available - Listar tickets disponíveis para compra
 router.get("/available", TicketController.findAvailable);
-
-// GET /api/tickets/pendentes - Listar tickets pendentes
-//router.get('/pendentes', TicketController.);
-
-// GET /api/tickets/estatisticas - Obter estatísticas
-//router.get('/estatisticas', TicketController.obterEstatisticas);
-
-// POST /api/tickets/validar-pesos - Validar pesos
-//router.post('/validar-pesos', TicketController.);
 
 // GET /api/tickets/:id - Buscar ticket por ID
 router.get("/:id", TicketController.findById);

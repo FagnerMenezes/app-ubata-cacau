@@ -154,7 +154,7 @@ export function useToggleFornecedorStatus() {
       queryClient.invalidateQueries({ queryKey: fornecedorKeys.lists() });
 
       const status =
-        updatedFornecedor.status === "ativo" ? "ativado" : "desativado";
+        "atualizado";
       toast.success(`Fornecedor ${status} com sucesso!`);
     },
     //eslint-disable-next-line @typescript-eslint/no-explicit-any

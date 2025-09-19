@@ -1,4 +1,3 @@
-import { Pagamento } from "@prisma/client";
 import { Request, Response } from "express";
 import { CustomError } from "../middleware/error.middleware";
 import { CompraService } from "../services/compra.service";
@@ -168,7 +167,7 @@ export class CompraController {
       // Calcular status baseado nos pagamentos
       const totalPago =
         compra.pagamentos?.reduce(
-          (sum: number, pag: Pagamento) => sum + pag.valorPago.toNumber(),
+          (sum: number, pag: any) => sum + pag.valorPago.toNumber(),
           0
         ) || 0;
       const valorTotal = Number(compra.valorTotal);

@@ -1,8 +1,10 @@
 import cors from "cors";
+import "dotenv/config";
 import express from "express";
 import { errorHandler } from "./middleware/error.middleware";
 
 // Routes
+import authRoutes from "./routes/auth.routes";
 import compraRoutes from "./routes/compra.routes";
 import fornecedorRoutes from "./routes/fornecedor.routes";
 import pagamentoRoutes from "./routes/pagamento.routes";
@@ -26,6 +28,7 @@ app.get("/health", (req, res) => {
 });
 
 // Routes
+app.use("/api/auth", authRoutes);
 app.use("/api/fornecedores", fornecedorRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/compras", compraRoutes);

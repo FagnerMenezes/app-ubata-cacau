@@ -1,25 +1,9 @@
-import { CreateCompraInput } from "../types";
-import { BaseService } from "./base.service";
-import { CompraModel } from "../models/compra.model";
-import { TicketModel } from "../models/ticket.model";
+import { v4 as uuidv4 } from "uuid";
+import supabase from "../lib/supabase";
 import { CustomError } from "../middleware/error.middleware";
-import type { 
-  Compra, 
-  Ticket, 
-  Fornecedor, 
-  Pagamento,
-  Prisma 
-} from "@prisma/client";
+import { CreateCompraInput } from "../types";
 
-// Remover estas linhas (4-8):
-// class CustomError extends Error {
-//   constructor(public message: string, public statusCode: number) {
-//     super(message);
-//     this.name = "CustomError";
-//   }
-// }
-
-export class CompraService extends BaseService {
+export class CompraService {
   static async listarCompras(params: {
     page?: number;
     limit?: number;
@@ -38,157 +22,216 @@ export class CompraService extends BaseService {
     } = params;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    try {
+      // Construir query base
+      let query = supabase.from("compras").select(
+        `
+          *,
+          fornecedor:fornecedores(
+            id,
+            nome,
+            documento
+          ),
+          ticket:tickets(
+            id,
+            pesoLiquido,
+            pesoBruto
+          ),
+          pagamentos(
+            id,
+            valorPago
+          )
+        `,
+        { count: "exact" }
+      );
 
-    if (fornecedorId) {
-      where.fornecedorId = fornecedorId;
-    }
+      // Aplicar filtros
+      if (fornecedorId) {
+        query = query.eq("fornecedorId", fornecedorId);
+      }
 
-    if (statusPagamento) {
-      where.statusPagamento = statusPagamento;
-    }
+      if (statusPagamento) {
+        query = query.eq("statusPagamento", statusPagamento);
+      }
 
-    if (dataInicio || dataFim) {
-      where.createdAt = {};
       if (dataInicio) {
-        where.createdAt.gte = new Date(dataInicio);
+        query = query.gte("createdAt", dataInicio);
       }
+
       if (dataFim) {
-        where.createdAt.lte = new Date(dataFim);
+        query = query.lte("createdAt", dataFim);
       }
-    }
 
-    const [compras, total] = await Promise.all([
-      this.prisma.compra.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          fornecedor: {
-            select: {
-              id: true,
-              nome: true,
-              documento: true,
-            },
-          },
-          ticket: {
-            select: {
-              id: true,
-              pesoLiquido: true,
-              pesoBruto: true,
-            },
-          },
-          pagamentos: {
-            select: {
-              id: true,
-              valorPago: true,
-              // data: true,
-            },
-          },
+      // Aplicar paginação e ordenação
+      query = query
+        .order("createdAt", { ascending: false })
+        .range(skip, skip + limit - 1);
+
+      const { data: compras, error, count } = await query;
+
+      if (error) {
+        console.error("Erro ao listar compras:", error);
+        throw new CustomError("Erro ao listar compras", 500);
+      }
+
+      return {
+        compras: compras || [],
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit),
         },
-      }),
-      this.prisma.compra.count({ where }),
-    ]);
-
-    return {
-      compras,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+      };
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError("Erro ao listar compras", 500);
+    }
   }
 
   static async buscarPorId(id: string) {
-    const compra = await this.prisma.compra.findUnique({
-      where: { id },
-      include: {
-        fornecedor: {
-          select: {
-            id: true,
-            nome: true,
-            documento: true,
-          },
-        },
-        ticket: {
-          select: {
-            id: true,
-            pesoLiquido: true,
-            pesoBruto: true,
-          },
-        },
-        pagamentos: true,
-      },
-    });
+    try {
+      const { data: compra, error } = await supabase
+        .from("compras")
+        .select(
+          `
+          *,
+          fornecedor:fornecedores(
+            id,
+            nome,
+            documento
+          ),
+          ticket:tickets(
+            id,
+            pesoLiquido,
+            pesoBruto
+          ),
+          pagamentos(*)
+        `
+        )
+        .eq("id", id)
+        .single();
 
-    return this.handleNotFound(compra, "Compra", id);
+      if (error) {
+        if (error.code === "PGRST116") {
+          throw new CustomError("Compra não encontrada", 404);
+        }
+        console.error("Erro ao buscar compra:", error);
+        throw new CustomError("Erro ao buscar compra", 500);
+      }
+
+      if (!compra) {
+        throw new CustomError("Compra não encontrada", 404);
+      }
+
+      return compra;
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
+      throw new CustomError("Erro ao buscar compra", 500);
+    }
   }
 
   static async converterTicket(data: CreateCompraInput) {
     try {
-      // Usar transação para garantir consistência
-      return await this.prisma.$transaction(async (tx) => {
-        // Verificar se o ticket existe e não foi convertido
-        const ticket = await tx.ticket.findUnique({
-          where: { id: data.ticketId },
-          include: { compra: true, fornecedor: true },
-        });
+      // Verificar se o ticket existe e não foi convertido
+      const { data: ticket, error: ticketError } = await supabase
+        .from("tickets")
+        .select(
+          `
+          *,
+          compra:compras(*),
+          fornecedor:fornecedores(*)
+        `
+        )
+        .eq("id", data.ticketId)
+        .single();
 
-        if (!ticket) {
+      if (ticketError) {
+        if (ticketError.code === "PGRST116") {
           throw new CustomError("Ticket não encontrado", 404);
         }
+        console.error("Erro ao buscar ticket:", ticketError);
+        throw new CustomError("Erro ao buscar ticket", 500);
+      }
 
-        if (ticket.compra) {
-          throw new CustomError("Ticket já foi convertido em compra", 400);
-        }
+      if (!ticket) {
+        throw new CustomError("Ticket não encontrado", 404);
+      }
 
-        // Calcular valores
-        const pesoLiquido = Number(ticket.pesoLiquido);
+      if (ticket.compra) {
+        throw new CustomError("Ticket já foi convertido em compra", 400);
+      }
 
-        // Calcular preço por kg com base no preço por arroba (1 arroba = 15 kg)
-        const precoPorKg = data.precoPorArroba / 15;
-        const valorTotal = pesoLiquido * precoPorKg;
+      // Calcular valores
+      const pesoLiquido = Number(ticket.pesoLiquido);
 
-        // Criar a compra
-        const compra = await tx.compra.create({
-          data: {
-            ticketId: data.ticketId,
-            fornecedorId: ticket.fornecedorId,
-            precoPorArroba: data.precoPorArroba,
-            precoPorKg: precoPorKg,
-            valorTotal,
-            statusPagamento: "PENDENTE",
-          },
-          include: {
-            fornecedor: {
-              select: {
-                id: true,
-                nome: true,
-                documento: true,
-              },
-            },
-            ticket: {
-              select: {
-                id: true,
-                pesoLiquido: true,
-                pesoBruto: true,
-                status: true,
-              },
-            },
-          },
-        });
+      // Calcular preço por kg com base no preço por arroba (1 arroba = 15 kg)
+      const precoPorKg = data.precoPorArroba / 15;
+      const valorTotal = pesoLiquido * precoPorKg;
 
-        // Atualizar status do ticket para CONVERTIDO
-        await tx.ticket.update({
-          where: { id: data.ticketId },
-          data: { status: "CONVERTIDO" },
-        });
+      const now = new Date().toISOString();
 
-        return compra;
-      });
+      // Criar a compra
+      const compraData = {
+        id: uuidv4(),
+        ticketId: data.ticketId,
+        fornecedorId: ticket.fornecedorId,
+        precoPorArroba: data.precoPorArroba,
+        precoPorKg: precoPorKg,
+        valorTotal,
+        statusPagamento: "PENDENTE",
+        observacoes: data.observacoes,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const { data: compra, error: compraError } = await supabase
+        .from("compras")
+        .insert([compraData])
+        .select(
+          `
+          *,
+          fornecedor:fornecedores(
+            id,
+            nome,
+            documento
+          ),
+          ticket:tickets(
+            id,
+            pesoLiquido,
+            pesoBruto,
+            status
+          )
+        `
+        )
+        .single();
+
+      if (compraError) {
+        console.error("Erro ao criar compra:", compraError);
+        throw new CustomError("Erro ao criar compra", 500);
+      }
+
+      // Atualizar status do ticket para CONVERTIDO
+      const { error: updateTicketError } = await supabase
+        .from("tickets")
+        .update({
+          status: "CONVERTIDO",
+          updatedAt: now,
+        })
+        .eq("id", data.ticketId);
+
+      if (updateTicketError) {
+        console.error("Erro ao atualizar ticket:", updateTicketError);
+        // Tentar reverter a criação da compra
+        await supabase.from("compras").delete().eq("id", compra.id);
+        throw new CustomError("Erro ao atualizar ticket", 500);
+      }
+
+      return compra;
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -200,21 +243,39 @@ export class CompraService extends BaseService {
   static async atualizar(id: string, data: Partial<CreateCompraInput>) {
     try {
       // Verificar se a compra existe
-      const compraExistente = await this.prisma.compra.findUnique({
-        where: { id },
-        include: { ticket: true, pagamentos: true },
-      });
+      const { data: compraExistente, error: compraError } = await supabase
+        .from("compras")
+        .select(
+          `
+          *,
+          ticket:tickets(*),
+          pagamentos(*)
+        `
+        )
+        .eq("id", id)
+        .single();
+
+      if (compraError) {
+        if (compraError.code === "PGRST116") {
+          throw new CustomError("Compra não encontrada", 404);
+        }
+        console.error("Erro ao buscar compra:", compraError);
+        throw new CustomError("Erro ao buscar compra", 500);
+      }
 
       if (!compraExistente) {
         throw new CustomError("Compra não encontrada", 404);
       }
 
       // Verificar se há pagamentos - permitir apenas edição de observações
-      const temPagamentos = compraExistente.pagamentos && compraExistente.pagamentos.length > 0;
+      const temPagamentos =
+        compraExistente.pagamentos && compraExistente.pagamentos.length > 0;
 
       if (temPagamentos) {
         // Se tem pagamentos, só permitir edição de observações
-        const camposProibidos = Object.keys(data).filter(key => key !== 'observacoes');
+        const camposProibidos = Object.keys(data).filter(
+          (key) => key !== "observacoes"
+        );
         if (camposProibidos.length > 0) {
           throw new CustomError(
             "Compra com pagamentos só permite edição do campo observações",
@@ -223,56 +284,64 @@ export class CompraService extends BaseService {
         }
       }
 
-      return await this.prisma.$transaction(async (tx) => {
-        let updateData: any = {};
+      let updateData: any = {
+        updatedAt: new Date().toISOString(),
+      };
 
-        // Se tem pagamentos, só permitir observações
-        if (temPagamentos) {
-          if (data.observacoes !== undefined) {
-            updateData.observacoes = data.observacoes;
-          }
-        } else {
-          // Se não tem pagamentos, permitir todas as alterações
-          if (data.observacoes !== undefined) {
-            updateData.observacoes = data.observacoes;
-          }
-
-          // Se o preço por arroba foi alterado, recalcular valores
-          if (data.precoPorArroba && data.precoPorArroba !== Number(compraExistente.precoPorArroba)) {
-            const pesoLiquido = Number(compraExistente.ticket.pesoLiquido);
-            const precoPorKg = data.precoPorArroba / 15;
-            updateData.precoPorArroba = data.precoPorArroba;
-            updateData.precoPorKg = precoPorKg;
-            updateData.valorTotal = pesoLiquido * precoPorKg;
-          }
+      // Se tem pagamentos, só permitir observações
+      if (temPagamentos) {
+        if (data.observacoes !== undefined) {
+          updateData.observacoes = data.observacoes;
+        }
+      } else {
+        // Se não tem pagamentos, permitir todas as alterações
+        if (data.observacoes !== undefined) {
+          updateData.observacoes = data.observacoes;
         }
 
-        // Atualizar a compra
-        const compraAtualizada = await tx.compra.update({
-          where: { id },
-          data: updateData,
-          include: {
-            fornecedor: {
-              select: {
-                id: true,
-                nome: true,
-                documento: true,
-              },
-            },
-            ticket: {
-              select: {
-                id: true,
-                pesoLiquido: true,
-                pesoBruto: true,
-                status: true,
-              },
-            },
-            pagamentos: true,
-          },
-        });
+        // Se o preço por arroba foi alterado, recalcular valores
+        if (
+          data.precoPorArroba &&
+          data.precoPorArroba !== Number(compraExistente.precoPorArroba)
+        ) {
+          const pesoLiquido = Number(compraExistente.ticket.pesoLiquido);
+          const precoPorKg = data.precoPorArroba / 15;
+          updateData.precoPorArroba = data.precoPorArroba;
+          updateData.precoPorKg = precoPorKg;
+          updateData.valorTotal = pesoLiquido * precoPorKg;
+        }
+      }
 
-        return compraAtualizada;
-      });
+      // Atualizar a compra
+      const { data: compraAtualizada, error: updateError } = await supabase
+        .from("compras")
+        .update(updateData)
+        .eq("id", id)
+        .select(
+          `
+          *,
+          fornecedor:fornecedores(
+            id,
+            nome,
+            documento
+          ),
+          ticket:tickets(
+            id,
+            pesoLiquido,
+            pesoBruto,
+            status
+          ),
+          pagamentos(*)
+        `
+        )
+        .single();
+
+      if (updateError) {
+        console.error("Erro ao atualizar compra:", updateError);
+        throw new CustomError("Erro ao atualizar compra", 500);
+      }
+
+      return compraAtualizada;
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -283,41 +352,65 @@ export class CompraService extends BaseService {
 
   static async deletar(id: string) {
     try {
-      return await this.prisma.$transaction(async (tx) => {
-        // Verificar se a compra existe
-        const compra = await tx.compra.findUnique({
-          where: { id },
-          include: {
-            ticket: true,
-            pagamentos: true
-          },
-        });
+      // Verificar se a compra existe
+      const { data: compra, error: compraError } = await supabase
+        .from("compras")
+        .select(
+          `
+          *,
+          ticket:tickets(*),
+          pagamentos(*)
+        `
+        )
+        .eq("id", id)
+        .single();
 
-        if (!compra) {
+      if (compraError) {
+        if (compraError.code === "PGRST116") {
           throw new CustomError("Compra não encontrada", 404);
         }
+        console.error("Erro ao buscar compra:", compraError);
+        throw new CustomError("Erro ao buscar compra", 500);
+      }
 
-        // Verificar se há pagamentos associados
-        if (compra.pagamentos && compra.pagamentos.length > 0) {
-          throw new CustomError(
-            "Não é possível deletar compra com pagamentos associados",
-            409
-          );
-        }
+      if (!compra) {
+        throw new CustomError("Compra não encontrada", 404);
+      }
 
-        // Deletar a compra
-        await tx.compra.delete({
-          where: { id },
-        });
+      // Verificar se há pagamentos associados
+      if (compra.pagamentos && compra.pagamentos.length > 0) {
+        throw new CustomError(
+          "Não é possível deletar compra com pagamentos associados",
+          409
+        );
+      }
 
-        // Reverter o status do ticket para PENDENTE
-        await tx.ticket.update({
-          where: { id: compra.ticketId },
-          data: { status: "PENDENTE" },
-        });
+      // Deletar a compra
+      const { error: deleteError } = await supabase
+        .from("compras")
+        .delete()
+        .eq("id", id);
 
-        return { message: "Compra deletada com sucesso" };
-      });
+      if (deleteError) {
+        console.error("Erro ao deletar compra:", deleteError);
+        throw new CustomError("Erro ao deletar compra", 500);
+      }
+
+      // Reverter o status do ticket para PENDENTE
+      const { error: updateTicketError } = await supabase
+        .from("tickets")
+        .update({
+          status: "PENDENTE",
+          updatedAt: new Date().toISOString(),
+        })
+        .eq("id", compra.ticketId);
+
+      if (updateTicketError) {
+        console.error("Erro ao atualizar ticket:", updateTicketError);
+        // Não falhar aqui, pois a compra já foi deletada
+      }
+
+      return { message: "Compra deletada com sucesso" };
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
@@ -328,53 +421,74 @@ export class CompraService extends BaseService {
 
   static async obterEstatisticas(periodo?: string) {
     try {
-      const whereCondition: any = {};
+      let dataInicio: string | undefined;
 
       // Filtrar por período se especificado
       if (periodo) {
         const agora = new Date();
-        let dataInicio: Date;
 
         switch (periodo) {
           case "mes":
-            dataInicio = new Date(agora.getFullYear(), agora.getMonth(), 1);
+            dataInicio = new Date(
+              agora.getFullYear(),
+              agora.getMonth(),
+              1
+            ).toISOString();
             break;
           case "trimestre":
-            dataInicio = new Date(agora.getFullYear(), agora.getMonth() - 3, 1);
+            dataInicio = new Date(
+              agora.getFullYear(),
+              agora.getMonth() - 3,
+              1
+            ).toISOString();
             break;
           case "ano":
-            dataInicio = new Date(agora.getFullYear(), 0, 1);
+            dataInicio = new Date(agora.getFullYear(), 0, 1).toISOString();
             break;
           default:
-            dataInicio = new Date(agora.getFullYear(), agora.getMonth(), 1);
+            dataInicio = new Date(
+              agora.getFullYear(),
+              agora.getMonth(),
+              1
+            ).toISOString();
         }
-
-        whereCondition.createdAt = {
-          gte: dataInicio,
-        };
       }
 
-      const [totalCompras, valorTotal, comprasPendentes, comprasPagas] = await Promise.all([
-        this.prisma.compra.count({ where: whereCondition }),
-        this.prisma.compra.aggregate({
-          where: whereCondition,
-          _sum: { valorTotal: true },
-        }),
-        this.prisma.compra.count({
-          where: { ...whereCondition, statusPagamento: "PENDENTE" },
-        }),
-        this.prisma.compra.count({
-          where: { ...whereCondition, statusPagamento: "PAGO" },
-        }),
-      ]);
+      // Buscar todas as compras do período
+      let query = supabase
+        .from("compras")
+        .select("valorTotal, statusPagamento");
+
+      if (dataInicio) {
+        query = query.gte("createdAt", dataInicio);
+      }
+
+      const { data: compras, error } = await query;
+
+      if (error) {
+        console.error("Erro ao buscar estatísticas:", error);
+        throw new CustomError("Erro ao obter estatísticas", 500);
+      }
+
+      const totalCompras = compras?.length || 0;
+      const valorTotal =
+        compras?.reduce((sum, compra) => sum + Number(compra.valorTotal), 0) ||
+        0;
+      const comprasPendentes =
+        compras?.filter((c) => c.statusPagamento === "PENDENTE").length || 0;
+      const comprasPagas =
+        compras?.filter((c) => c.statusPagamento === "PAGO").length || 0;
 
       return {
         totalCompras,
-        valorTotal: Number(valorTotal._sum.valorTotal) || 0,
+        valorTotal,
         comprasPendentes,
         comprasPagas,
       };
     } catch (error) {
+      if (error instanceof CustomError) {
+        throw error;
+      }
       throw new CustomError("Erro ao obter estatísticas", 500);
     }
   }

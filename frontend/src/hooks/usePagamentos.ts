@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { pagamentosService } from '@/services/pagamentos'
 import type {
-  Pagamento,
   CreatePagamentoData,
   UpdatePagamentoData,
   PagamentoFilters
@@ -120,7 +119,7 @@ export function useUpdatePagamento() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdatePagamentoData }) =>
       pagamentosService.update(id, data),
-    onSuccess: (updatedPagamento, variables) => {
+    onSuccess: (updatedPagamento) => {
       // Atualizar cache do pagamento específico
       if (updatedPagamento && updatedPagamento.id) {
         queryClient.setQueryData(
@@ -154,7 +153,7 @@ export function useDeletePagamento() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, compraId }: { id: string; compraId?: string }) => pagamentosService.delete(id),
+    mutationFn: ({ id }: { id: string; compraId?: string }) => pagamentosService.delete(id),
     onSuccess: (_, variables) => {
       // Remover do cache
       queryClient.removeQueries({ queryKey: pagamentoKeys.detail(variables.id) })

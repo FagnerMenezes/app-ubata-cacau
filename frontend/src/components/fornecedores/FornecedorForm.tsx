@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { CreateFornecedorData, Fornecedor, Endereco, Contato } from "@/types/fornecedor";
+import type { CreateFornecedorData, Fornecedor } from "@/types/fornecedor";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -22,16 +22,46 @@ const fornecedorSchema = z.object({
   fazenda: z.string().optional(),
   observacoes: z.string().optional(),
   // Endereco fields - só valida se não estiver vazio
-  "endereco.rua": z.string().refine(val => val === "" || val.length >= 5, "Rua deve ter pelo menos 5 caracteres").optional(),
-  "endereco.cidade": z.string().refine(val => val === "" || val.length >= 2, "Cidade deve ter pelo menos 2 caracteres").optional(),
-  "endereco.estado": z.string().refine(val => val === "" || val.length === 2, "Estado deve ter 2 caracteres").optional(),
-  "endereco.cep": z.string().refine(val => val === "" || val.length >= 8, "CEP deve ter pelo menos 8 caracteres").optional(),
+  "endereco.rua": z
+    .string()
+    .refine(
+      (val) => val === "" || val.length >= 5,
+      "Rua deve ter pelo menos 5 caracteres"
+    )
+    .optional(),
+  "endereco.cidade": z
+    .string()
+    .refine(
+      (val) => val === "" || val.length >= 2,
+      "Cidade deve ter pelo menos 2 caracteres"
+    )
+    .optional(),
+  "endereco.estado": z
+    .string()
+    .refine(
+      (val) => val === "" || val.length === 2,
+      "Estado deve ter 2 caracteres"
+    )
+    .optional(),
+  "endereco.cep": z
+    .string()
+    .refine(
+      (val) => val === "" || val.length >= 8,
+      "CEP deve ter pelo menos 8 caracteres"
+    )
+    .optional(),
   "endereco.complemento": z.string().optional(),
   // Contato fields - só valida se não estiver vazio
-  "contato.email": z.string().refine(val => val === "" || z.string().email().safeParse(val).success, "Email inválido").optional(),
-  "contato.telefone": z.string().refine(val => val === "" || val.length >= 10, "Telefone deve ter pelo menos 10 caracteres").optional(),
-  "contato.whatsapp": z.string().refine(val => val === "" || val.length >= 10, "WhatsApp deve ter pelo menos 10 caracteres").optional(),
-  "contato.telefoneSecundario": z.string().refine(val => val === "" || val.length >= 10, "Telefone secundário deve ter pelo menos 10 caracteres").optional(),
+  "contato.email": z
+    .string()
+    .refine(
+      (val) => val === "" || z.string().email().safeParse(val).success,
+      "Email inválido"
+    )
+    .optional(),
+  "contato.telefone": z.string().optional(),
+  "contato.whatsapp": z.string().optional(),
+  "contato.telefoneSecundario": z.string().optional(),
 });
 
 type FornecedorFormData = z.infer<typeof fornecedorSchema>;
@@ -54,8 +84,8 @@ export default function FornecedorForm({
   const {
     register,
     handleSubmit,
-    setValue,
-    watch,
+    // setValue,
+    //watch,
     reset,
     getValues,
     formState: { errors },
@@ -94,7 +124,8 @@ export default function FornecedorForm({
         "contato.email": fornecedor.contato?.email || "",
         "contato.telefone": fornecedor.contato?.telefone || "",
         "contato.whatsapp": fornecedor.contato?.whatsapp || "",
-        "contato.telefoneSecundario": fornecedor.contato?.telefoneSecundario || "",
+        "contato.telefoneSecundario":
+          fornecedor.contato?.telefoneSecundario || "",
       });
     } else {
       reset({
@@ -116,6 +147,7 @@ export default function FornecedorForm({
   }, [fornecedor, reset]);
 
   const onSubmit = async (data: FornecedorFormData) => {
+    console.log(data);
     setIsLoading(true);
     try {
       // Debug: Pegar todos os valores usando getValues()
@@ -131,16 +163,18 @@ export default function FornecedorForm({
       };
 
       // Use os objetos aninhados que estão sendo criados automaticamente
-      const endereco = allValues.endereco as any;
-      const contato = allValues.contato as any;
+      // @ts-expect-error err
+      const endereco = allValues.endereco;
+      //@ts-expect-error err
+      const contato = allValues.contato;
 
       // Only add endereco if at least one field is filled
-      const hasEnderecoData = endereco && (
-        (endereco.rua && endereco.rua.trim() !== "") ||
-        (endereco.cidade && endereco.cidade.trim() !== "") ||
-        (endereco.estado && endereco.estado.trim() !== "") ||
-        (endereco.cep && endereco.cep.trim() !== "")
-      );
+      const hasEnderecoData =
+        endereco &&
+        ((endereco.rua && endereco.rua.trim() !== "") ||
+          (endereco.cidade && endereco.cidade.trim() !== "") ||
+          (endereco.estado && endereco.estado.trim() !== "") ||
+          (endereco.cep && endereco.cep.trim() !== ""));
 
       if (hasEnderecoData) {
         formattedData.endereco = {
@@ -153,12 +187,13 @@ export default function FornecedorForm({
       }
 
       // Only add contato if at least one field is filled
-      const hasContatoData = contato && (
-        (contato.email && contato.email.trim() !== "") ||
-        (contato.telefone && contato.telefone.trim() !== "") ||
-        (contato.whatsapp && contato.whatsapp.trim() !== "") ||
-        (contato.telefoneSecundario && contato.telefoneSecundario.trim() !== "")
-      );
+      const hasContatoData =
+        contato &&
+        ((contato.email && contato.email.trim() !== "") ||
+          (contato.telefone && contato.telefone.trim() !== "") ||
+          (contato.whatsapp && contato.whatsapp.trim() !== "") ||
+          (contato.telefoneSecundario &&
+            contato.telefoneSecundario.trim() !== ""));
 
       if (hasContatoData) {
         formattedData.contato = {
@@ -207,6 +242,8 @@ export default function FornecedorForm({
                   id="nome"
                   {...register("nome")}
                   placeholder="Nome do fornecedor"
+                  required
+                  className="placeholder:text-gray-300"
                 />
                 {errors.nome && (
                   <p className="text-sm text-red-500">{errors.nome.message}</p>
@@ -217,11 +254,9 @@ export default function FornecedorForm({
                 <Input
                   id="documento"
                   {...register("documento")}
-                  placeholder={
-                    watch("tipoDocumento") === "CPF"
-                      ? "000.000.000-00"
-                      : "00.000.000/0001-00"
-                  }
+                  placeholder="000.000.000-00"
+                  required
+                  className="placeholder:text-gray-300"
                 />
                 {errors.documento && (
                   <p className="text-sm text-red-500">
@@ -236,10 +271,13 @@ export default function FornecedorForm({
                   id="contato.email"
                   type="email"
                   {...register("contato.email")}
-                  placeholder="email@exemplo.com"
+                  placeholder="email@exemplo.com "
+                  className="placeholder:text-gray-300"
                 />
                 {errors["contato.email"] && (
-                  <p className="text-sm text-red-500">{errors["contato.email"]?.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors["contato.email"]?.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
@@ -248,6 +286,7 @@ export default function FornecedorForm({
                   id="fazenda"
                   {...register("fazenda")}
                   placeholder="Nome da fazenda"
+                  className="placeholder:text-gray-300"
                 />
                 {errors.fazenda && (
                   <p className="text-sm text-red-500">
@@ -262,6 +301,7 @@ export default function FornecedorForm({
                   id="contato.telefone"
                   {...register("contato.telefone")}
                   placeholder="(11) 99999-9999"
+                  className="placeholder:text-gray-300"
                 />
                 {errors["contato.telefone"] && (
                   <p className="text-sm text-red-500">
@@ -276,6 +316,7 @@ export default function FornecedorForm({
                   id="endereco.rua"
                   {...register("endereco.rua")}
                   placeholder="Rua, número, bairro"
+                  className="placeholder:text-gray-300"
                 />
                 {errors["endereco.rua"] && (
                   <p className="text-sm text-red-500">
@@ -290,6 +331,7 @@ export default function FornecedorForm({
                   id="endereco.cidade"
                   {...register("endereco.cidade")}
                   placeholder="Nome da cidade"
+                  className="placeholder:text-gray-300"
                 />
                 {errors["endereco.cidade"] && (
                   <p className="text-sm text-red-500">
@@ -303,8 +345,10 @@ export default function FornecedorForm({
                 <Input
                   id="endereco.estado"
                   {...register("endereco.estado")}
-                  placeholder="SP"
+                  placeholder="BA"
                   maxLength={2}
+                  className="placeholder:text-gray-300"
+                  defaultValue="BA"
                 />
                 {errors["endereco.estado"] && (
                   <p className="text-sm text-red-500">
@@ -319,6 +363,7 @@ export default function FornecedorForm({
                   id="endereco.cep"
                   {...register("endereco.cep")}
                   placeholder="00000-000"
+                  className="placeholder:text-gray-300"
                 />
                 {errors["endereco.cep"] && (
                   <p className="text-sm text-red-500">
@@ -333,6 +378,7 @@ export default function FornecedorForm({
                   id="contato.whatsapp"
                   {...register("contato.whatsapp")}
                   placeholder="(11) 99999-9999"
+                  className="placeholder:text-gray-300"
                 />
                 {errors["contato.whatsapp"] && (
                   <p className="text-sm text-red-500">
@@ -342,11 +388,14 @@ export default function FornecedorForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="contato.telefoneSecundario">Telefone Secundário</Label>
+                <Label htmlFor="contato.telefoneSecundario">
+                  Telefone Secundário
+                </Label>
                 <Input
                   id="contato.telefoneSecundario"
                   {...register("contato.telefoneSecundario")}
                   placeholder="(11) 88888-8888"
+                  className="placeholder:text-gray-300"
                 />
                 {errors["contato.telefoneSecundario"] && (
                   <p className="text-sm text-red-500">
@@ -360,6 +409,7 @@ export default function FornecedorForm({
                   id="observacoes"
                   {...register("observacoes")}
                   placeholder="Observações do fornecedor"
+                  className="placeholder:text-gray-300"
                 />
                 {errors.observacoes && (
                   <p className="text-sm text-red-500">
@@ -367,56 +417,22 @@ export default function FornecedorForm({
                   </p>
                 )}
               </div>
-
-              {/* <div className="space-y-2">
-                <Label htmlFor="endereco.cidade">Cidade *</Label>
-                <Input
-                  id="endereco.cidade"
-                  {...register("endereco.cidade")}
-                  placeholder="Nome da cidade"
-                />
-                {errors.endereco?.cidade && (
-                  <p className="text-sm text-red-500">
-                    {errors.endereco.cidade.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="endereco.estado">Estado *</Label>
-                <Input
-                  id="endereco.estado"
-                  {...register("endereco.estado")}
-                  placeholder="SP"
-                  maxLength={2}
-                />
-                {errors.endereco?.estado && (
-                  <p className="text-sm text-red-500">
-                    {errors.endereco.estado.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="endereco.cep">CEP *</Label>
-                <Input
-                  id="endereco.cep"
-                  {...register("endereco.cep")}
-                  placeholder="00000-000"
-                />
-                {errors.endereco?.cep && (
-                  <p className="text-sm text-red-500">
-                    {errors.endereco.cep.message}
-                  </p>
-                )}
-              </div> */}
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="bg-gray-600 text-white hover:bg-gray-900"
+              >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="bg-blue-600 text-white hover:bg-blue-900"
+              >
                 <Save className="h-4 w-4 mr-2" />
                 {isLoading ? "Salvando..." : "Salvar"}
               </Button>

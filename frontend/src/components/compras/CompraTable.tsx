@@ -204,7 +204,6 @@ export function CompraTable({
                   <Edit className="mr-2 h-4 w-4" />
                   Editar
                 </DropdownMenuItem>
-                {/**@ts-expect-error err */}
                 {compra?.statusPagamento?.toLowerCase() === "pendente" && (
                   <>
                     <DropdownMenuItem

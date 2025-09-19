@@ -36,7 +36,7 @@ const compraSchema = z.object({
   precoArroba: z.number().min(0.01, "Preço por arroba deve ser maior que 0"),
   qualidade: z.string().min(1, "Selecione a qualidade"),
   observacoes: z.string().optional(),
-  necessitaAprovacao: z.boolean().default(false),
+  necessitaAprovacao: z.boolean(),
   umidade: z.number().min(0).max(100, "Umidade deve estar entre 0 e 100%"),
   fermentacao: z.string().min(1, "Selecione a fermentação"),
 });

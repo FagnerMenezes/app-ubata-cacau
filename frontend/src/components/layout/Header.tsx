@@ -7,8 +7,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, Moon, Search, Settings, Sun, User } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
+import { Bell, LogOut, Moon, Search, Settings, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   sidebarExpanded: boolean;
@@ -16,6 +18,13 @@ interface HeaderProps {
 
 export default function Header({ sidebarExpanded }: HeaderProps) {
   const { setTheme, theme } = useTheme();
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <header
@@ -99,10 +108,13 @@ export default function Header({ sidebarExpanded }: HeaderProps) {
                     </div>
                     <div>
                       <p className="text-sm font-semibold leading-none">
-                        Usuário Admin
+                        {user?.name || "Usuário"}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground mt-1">
-                        admin@ubatan.com
+                        {user?.email || "email@exemplo.com"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.role === "ADMIN" ? "Administrador" : "Usuário"}
                       </p>
                     </div>
                   </div>
@@ -125,7 +137,11 @@ export default function Header({ sidebarExpanded }: HeaderProps) {
               </div>
               <DropdownMenuSeparator className="bg-gradient-to-r from-transparent via-border/50 to-transparent mx-2" />
               <div className="p-2">
-                <DropdownMenuItem className="hover:bg-gradient-to-r hover:from-destructive/20 hover:to-destructive/10 hover:text-destructive transition-all duration-200 rounded-lg cursor-pointer">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="hover:bg-gradient-to-r hover:from-destructive/20 hover:to-destructive/10 hover:text-destructive transition-all duration-200 rounded-lg cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
                   Sair
                 </DropdownMenuItem>
               </div>

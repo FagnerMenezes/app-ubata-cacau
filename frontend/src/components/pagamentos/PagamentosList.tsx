@@ -16,14 +16,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useDeletePagamento } from "@/hooks/usePagamentos";
+import { useGeneratePaymentReceiptPDF } from "@/hooks/usePDFGenerator";
 import type { MetodoPagamento, Pagamento } from "@/types/pagamento";
 import { formatDate } from "date-fns";
 import {
   AlertTriangle,
   DollarSign,
   Edit,
+  FileText,
   MoreHorizontal,
-  Receipt,
   Trash2,
 } from "lucide-react";
 
@@ -43,6 +44,7 @@ export function PagamentosList({
   isLoading = false,
 }: PagamentosListProps) {
   const deleteMutation = useDeletePagamento();
+  const generatePDFMutation = useGeneratePaymentReceiptPDF();
 
   const handleDelete = async (pagamento: Pagamento) => {
     if (window.confirm("Tem certeza que deseja excluir este pagamento?")) {
@@ -56,6 +58,14 @@ export function PagamentosList({
       } catch (error) {
         console.error("Erro ao deletar pagamento:", error);
       }
+    }
+  };
+
+  const handleGeneratePDF = async (pagamento: Pagamento) => {
+    try {
+      await generatePDFMutation.mutateAsync(pagamento.id);
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
     }
   };
 
@@ -168,14 +178,23 @@ export function PagamentosList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-white">
+                        <DropdownMenuItem
+                          onClick={() => handleGeneratePDF(pagamento)}
+                          className="text-green-600"
+                          disabled={generatePDFMutation.isPending}
+                        >
+                          <FileText className="mr-2 h-4 w-4" />
+                          Gerar recibo
+                        </DropdownMenuItem>
                         {onGenerateRecibo && (
-                          <DropdownMenuItem
-                            onClick={() => onGenerateRecibo(pagamento)}
-                            className="text-blue-600"
-                          >
-                            <Receipt className="mr-2 h-4 w-4" />
-                            Gerar Recibo
-                          </DropdownMenuItem>
+                          <></>
+                          // <DropdownMenuItem
+                          // onClick={() => handleGeneratePDF(pagamento)}
+                          //   className="text-blue-600"
+                          // >
+                          //   <Receipt className="mr-2 h-4 w-4" />
+                          //   Gerar Recibo
+                          // </DropdownMenuItem>
                         )}
                         {onEdit && (
                           <DropdownMenuItem

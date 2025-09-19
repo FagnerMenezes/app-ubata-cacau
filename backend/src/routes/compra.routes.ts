@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { CompraController } from "../controllers/compra.controller";
+import { authenticateToken } from "../middleware/auth.middleware";
+import { requireModuleAccess } from "../middleware/permissions.middleware";
 import {
   validateBody,
   validateParams,
@@ -12,6 +14,10 @@ import {
 } from "../types";
 
 const router = Router();
+
+// Aplicar autenticação e permissões em todas as rotas
+router.use(authenticateToken);
+router.use(requireModuleAccess("compras"));
 
 // Rotas específicas (devem vir antes das rotas com parâmetros)
 router.get("/estatisticas", CompraController.obterEstatisticas);

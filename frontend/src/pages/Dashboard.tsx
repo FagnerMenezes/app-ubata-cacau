@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Bar,
   BarChart,
@@ -31,51 +32,32 @@ import {
   YAxis,
 } from "recharts";
 
-// Dados mockados para os gráficos
-const producaoMensal = [
-  { mes: "Jan", producao: 1800, qualidade: 8.2 },
-  { mes: "Fev", producao: 2100, qualidade: 8.4 },
-  { mes: "Mar", producao: 1950, qualidade: 8.1 },
-  { mes: "Abr", producao: 2300, qualidade: 8.6 },
-  { mes: "Mai", producao: 2150, qualidade: 8.3 },
-  { mes: "Jun", producao: 2350, qualidade: 8.5 },
-];
-
-const receitaSemanal = [
-  { semana: "Sem 1", receita: 8500 },
-  { semana: "Sem 2", receita: 12300 },
-  { semana: "Sem 3", receita: 9800 },
-  { semana: "Sem 4", receita: 14650 },
-];
-
-const distribuicaoFornecedores = [
-  { nome: "Pequenos", valor: 25, cor: "#8884d8" },
-  { nome: "Médios", valor: 15, cor: "#82ca9d" },
-  { nome: "Grandes", valor: 5, cor: "#ffc658" },
-];
-
-const alertas = [
-  {
-    id: 1,
-    tipo: "Estoque Baixo",
-    descricao: "Cacau Premium abaixo de 100kg",
-    urgencia: "alta",
-  },
-  {
-    id: 2,
-    tipo: "Pagamento Pendente",
-    descricao: "Fornecedor João Silva - R$ 2.500",
-    urgencia: "media",
-  },
-  {
-    id: 3,
-    tipo: "Qualidade",
-    descricao: "Lote #234 com qualidade abaixo do padrão",
-    urgencia: "alta",
-  },
-];
+// Dados serão carregados via API
+const producaoMensal: any[] = [];
+const receitaSemanal: any[] = [];
+const distribuicaoFornecedores: any[] = [];
+const alertas: any[] = [];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
+  const handleNovaCompra = () => {
+    navigate("/compras");
+  };
+
+  const handleCadastrarFornecedor = () => {
+    navigate("/fornecedores");
+  };
+
+  const handleRelatorioQualidade = () => {
+    navigate("/relatorios");
+  };
+
+  const handleAgendarColeta = () => {
+    // Por enquanto, redireciona para compras onde pode agendar
+    navigate("/compras");
+  };
+
   return (
     <div className="space-y-8 p-6 bg-gradient-to-br from-background via-background/98 to-muted/20 min-h-screen">
       {/* Header com gradiente */}
@@ -107,11 +89,11 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-              2,350 kg
+              --
             </div>
-            <p className="text-sm text-emerald-600 font-medium mt-1 flex items-center gap-1">
+            <p className="text-sm text-muted-foreground font-medium mt-1 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              +20.1% em relação ao mês anterior
+              Dados serão carregados via API
             </p>
           </CardContent>
         </Card>
@@ -128,11 +110,11 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-              45
+              --
             </div>
-            <p className="text-sm text-emerald-600 font-medium mt-1 flex items-center gap-1">
+            <p className="text-sm text-muted-foreground font-medium mt-1 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              +2 novos este mês
+              Dados serão carregados via API
             </p>
           </CardContent>
         </Card>
@@ -149,11 +131,11 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-              R$ 45.250
+              --
             </div>
-            <p className="text-sm text-emerald-600 font-medium mt-1 flex items-center gap-1">
+            <p className="text-sm text-muted-foreground font-medium mt-1 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              +8% em relação ao mês anterior
+              Dados serão carregados via API
             </p>
           </CardContent>
         </Card>
@@ -170,11 +152,11 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-              8.4/10
+              --
             </div>
-            <p className="text-sm text-emerald-600 font-medium mt-1 flex items-center gap-1">
+            <p className="text-sm text-muted-foreground font-medium mt-1 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              +0.2 pontos este mês
+              Dados serão carregados via API
             </p>
           </CardContent>
         </Card>
@@ -415,11 +397,15 @@ export default function Dashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-4">
-          <Button className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-primary via-primary/95 to-primary/90 hover:from-primary/90 hover:via-primary/85 hover:to-primary/80 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 font-semibold">
+          <Button 
+            onClick={handleNovaCompra}
+            className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-primary via-primary/95 to-primary/90 hover:from-primary/90 hover:via-primary/85 hover:to-primary/80 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 font-semibold"
+          >
             <Package className="h-5 w-5" />
             Nova Compra
           </Button>
           <Button
+            onClick={handleCadastrarFornecedor}
             variant="outline"
             className="flex items-center gap-3 px-6 py-3 border-primary/30 bg-gradient-to-r from-background/80 to-primary/5 hover:from-primary/10 hover:to-primary/15 hover:border-primary/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold"
           >
@@ -427,6 +413,7 @@ export default function Dashboard() {
             Cadastrar Fornecedor
           </Button>
           <Button
+            onClick={handleRelatorioQualidade}
             variant="outline"
             className="flex items-center gap-3 px-6 py-3 border-accent/30 bg-gradient-to-r from-background/80 to-accent/5 hover:from-accent/10 hover:to-accent/15 hover:border-accent/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold"
           >
@@ -434,6 +421,7 @@ export default function Dashboard() {
             Relatório de Qualidade
           </Button>
           <Button
+            onClick={handleAgendarColeta}
             variant="outline"
             className="flex items-center gap-3 px-6 py-3 border-muted-foreground/30 bg-gradient-to-r from-background/80 to-muted/10 hover:from-muted/15 hover:to-muted/20 hover:border-muted-foreground/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold"
           >

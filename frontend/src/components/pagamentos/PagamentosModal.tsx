@@ -5,6 +5,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useGeneratePaymentReceiptPDF } from "@/hooks/usePDFGenerator";
 import { usePagamentosByCompra } from "@/hooks/usePagamentos";
 import type { Pagamento } from "@/types/pagamento";
 import { useState } from "react";
@@ -36,6 +37,8 @@ export function PagamentosModal({
     refetch,
   } = usePagamentosByCompra(compraId);
 
+  const generatePDFMutation = useGeneratePaymentReceiptPDF();
+
   const handleSuccess = () => {
     refetch();
     setEditingPagamento(null);
@@ -52,9 +55,12 @@ export function PagamentosModal({
     setActiveTab("resumo");
   };
 
-  const handleGenerateRecibo = (pagamento: Pagamento) => {
-    // TODO: Implementar geração de recibo
-    console.log("Gerar recibo para:", pagamento);
+  const handleGenerateRecibo = async (pagamento: Pagamento) => {
+    try {
+      await generatePDFMutation.mutateAsync(pagamento.id);
+    } catch (error) {
+      console.error("Erro ao gerar recibo PDF:", error);
+    }
   };
 
   if (isLoading) {

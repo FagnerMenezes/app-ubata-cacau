@@ -25,7 +25,7 @@ export const comprasService = {
     const response = await apiClient.get<PaginatedResponse<Compra>>(
       `/compras?${params.toString()}`
     );
-    return response.data;
+    return response.data.data || response.data;
   },
 
   // Buscar compra por ID

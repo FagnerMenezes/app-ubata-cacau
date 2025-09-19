@@ -1,16 +1,8 @@
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
 import { 
   Package, 
   Search, 
@@ -18,7 +10,6 @@ import {
   Plus, 
   AlertTriangle, 
   TrendingUp, 
-  TrendingDown,
   Edit,
   Trash2,
   MoreHorizontal,
@@ -32,198 +23,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-// Dados mockados para demonstração
-const estoque = [
-  {
-    id: "1",
-    produto: "Cacau Premium",
-    categoria: "Cacau",
-    quantidade: 1250,
-    unidade: "kg",
-    estoqueMinimo: 500,
-    estoqueMaximo: 2000,
-    valorUnitario: 28.50,
-    valorTotal: 35625,
-    localizacao: "Galpão A - Setor 1",
-    dataUltimaMovimentacao: "2024-12-15",
-    fornecedor: "Fazenda São José",
-    status: "normal"
-  },
-  {
-    id: "2",
-    produto: "Cacau Orgânico",
-    categoria: "Cacau",
-    quantidade: 350,
-    unidade: "kg",
-    estoqueMinimo: 400,
-    estoqueMaximo: 1500,
-    valorUnitario: 32.00,
-    valorTotal: 11200,
-    localizacao: "Galpão B - Setor 2",
-    dataUltimaMovimentacao: "2024-12-10",
-    fornecedor: "Cooperativa Cacau Sul",
-    status: "baixo"
-  },
-  {
-    id: "3",
-    produto: "Cacau Tradicional",
-    categoria: "Cacau",
-    quantidade: 800,
-    unidade: "kg",
-    estoqueMinimo: 300,
-    estoqueMaximo: 1200,
-    valorUnitario: 24.00,
-    valorTotal: 19200,
-    localizacao: "Galpão A - Setor 3",
-    dataUltimaMovimentacao: "2024-12-12",
-    fornecedor: "Sítio Bela Vista",
-    status: "normal"
-  },
-  {
-    id: "4",
-    produto: "Cacau Especial",
-    categoria: "Cacau",
-    quantidade: 150,
-    unidade: "kg",
-    estoqueMinimo: 200,
-    estoqueMaximo: 800,
-    valorUnitario: 35.00,
-    valorTotal: 5250,
-    localizacao: "Galpão C - Setor 1",
-    dataUltimaMovimentacao: "2024-12-08",
-    fornecedor: "Fazenda Esperança",
-    status: "critico"
-  },
-  {
-    id: "5",
-    produto: "Embalagens 1kg",
-    categoria: "Embalagem",
-    quantidade: 5000,
-    unidade: "un",
-    estoqueMinimo: 2000,
-    estoqueMaximo: 10000,
-    valorUnitario: 0.85,
-    valorTotal: 4250,
-    localizacao: "Depósito - Prateleira A",
-    dataUltimaMovimentacao: "2024-12-14",
-    fornecedor: "Embalagens Premium",
-    status: "normal"
-  },
-  {
-    id: "6",
-    produto: "Embalagens 500g",
-    categoria: "Embalagem",
-    quantidade: 1200,
-    unidade: "un",
-    estoqueMinimo: 1500,
-    estoqueMaximo: 8000,
-    valorUnitario: 0.65,
-    valorTotal: 780,
-    localizacao: "Depósito - Prateleira B",
-    dataUltimaMovimentacao: "2024-12-13",
-    fornecedor: "Embalagens Premium",
-    status: "baixo"
-  }
-]
+// Dados serão carregados via API
+const estoque: any[] = []
 
-const mockEstoque = [
-  {
-    id: '1',
-    produto: 'Cacau em Amêndoa Premium',
-    categoria: 'Cacau Processado',
-    quantidade: 1500,
-    unidade: 'kg',
-    estoqueMinimo: 500,
-    estoqueMaximo: 3000,
-    valorUnitario: 35.50,
-    dataUltimaEntrada: '2024-01-15',
-    fornecedor: 'Fazenda São José',
-    localizacao: 'Galpão A - Setor 1',
-    status: 'adequado' as const
-  },
-  {
-    id: "2",
-    produto: "Cacau Orgânico",
-    categoria: "Cacau",
-    quantidade: 350,
-    unidade: "kg",
-    estoqueMinimo: 400,
-    estoqueMaximo: 1500,
-    valorUnitario: 32.00,
-    valorTotal: 11200,
-    localizacao: "Galpão B - Setor 2",
-    dataUltimaMovimentacao: "2024-12-10",
-    fornecedor: "Cooperativa Cacau Sul",
-    status: "baixo"
-  },
-  {
-    id: "3",
-    produto: "Cacau Tradicional",
-    categoria: "Cacau",
-    quantidade: 800,
-    unidade: "kg",
-    estoqueMinimo: 300,
-    estoqueMaximo: 1200,
-    valorUnitario: 24.00,
-    valorTotal: 19200,
-    localizacao: "Galpão A - Setor 3",
-    dataUltimaMovimentacao: "2024-12-12",
-    fornecedor: "Sítio Bela Vista",
-    status: "normal"
-  },
-  {
-    id: "4",
-    produto: "Cacau Especial",
-    categoria: "Cacau",
-    quantidade: 150,
-    unidade: "kg",
-    estoqueMinimo: 200,
-    estoqueMaximo: 800,
-    valorUnitario: 35.00,
-    valorTotal: 5250,
-    localizacao: "Galpão C - Setor 1",
-    dataUltimaMovimentacao: "2024-12-08",
-    fornecedor: "Fazenda Esperança",
-    status: "critico"
-  },
-  {
-    id: "5",
-    produto: "Embalagens 1kg",
-    categoria: "Embalagem",
-    quantidade: 5000,
-    unidade: "un",
-    estoqueMinimo: 2000,
-    estoqueMaximo: 10000,
-    valorUnitario: 0.85,
-    valorTotal: 4250,
-    localizacao: "Depósito - Prateleira A",
-    dataUltimaMovimentacao: "2024-12-14",
-    fornecedor: "Embalagens Premium",
-    status: "normal"
-  },
-  {
-    id: "6",
-    produto: "Embalagens 500g",
-    categoria: "Embalagem",
-    quantidade: 1200,
-    unidade: "un",
-    estoqueMinimo: 1500,
-    estoqueMaximo: 8000,
-    valorUnitario: 0.65,
-    valorTotal: 780,
-    localizacao: "Depósito - Prateleira B",
-    dataUltimaMovimentacao: "2024-12-13",
-    fornecedor: "Embalagens Premium",
-    status: "baixo"
-  }
-]
 
 export default function Estoque() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoriaFilter, setCategoriaFilter] = useState<string>('todos');
-  const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('todos');
 
   const filteredEstoque = estoque.filter(item => {
     const matchesSearch = item.produto.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -232,31 +40,30 @@ export default function Estoque() {
     return matchesSearch && matchesCategory
   })
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'normal':
-        return 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg'
-      case 'baixo':
-        return 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg'
-      case 'critico':
-        return 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
-      default:
-        return 'bg-gradient-to-r from-muted to-muted/80 text-muted-foreground'
-    }
-  }
+  // Funções para manipular o formulário
+  const handleAddNew = () => {
+    setSelectedItem(null);
+    setIsFormOpen(true);
+  };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'normal':
-        return <TrendingUp className="h-3 w-3" />
-      case 'baixo':
-        return <TrendingDown className="h-3 w-3" />
-      case 'critico':
-        return <AlertTriangle className="h-3 w-3" />
-      default:
-        return null
-    }
-  }
+  const handleEdit = (item: any) => {
+    setSelectedItem(item);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    console.log('Delete item:', id);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setSelectedItem(null);
+  };
+
+  const handleSave = (data: any) => {
+    console.log('Save data:', data);
+    setIsFormOpen(false);
+  };
 
   const totalItens = estoque.length
   const valorTotalEstoque = estoque.reduce((acc, item) => acc + item.valorTotal, 0)
@@ -279,7 +86,7 @@ export default function Estoque() {
             </p>
           </div>
           <Button 
-            onClick={handleAddNew}
+            onClick={() => handleAddNew()}
             className="bg-gradient-to-r from-primary via-primary/95 to-primary/90 hover:from-primary/90 hover:via-primary/85 hover:to-primary/80 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 font-semibold"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -318,7 +125,7 @@ export default function Estoque() {
               Valor Total
             </CardTitle>
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 group-hover:from-emerald-500/30 group-hover:to-emerald-500/20 transition-all duration-300">
-              <BarChart3 className="h-5 w-5 text-emerald-600" />
+              <TrendingUp className="h-5 w-5 text-emerald-600" />
             </div>
           </CardHeader>
           <CardContent className="relative">
@@ -504,12 +311,12 @@ export default function Estoque() {
                   </div>
                 </div>
                 {item.status === 'baixo' && (
-                  <Alert className="border-red-200 bg-gradient-to-r from-red-50 to-red-100">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    <AlertDescription className="text-red-700 text-xs">
+                  <div className="border-red-200 bg-gradient-to-r from-red-50 to-red-100 border rounded-lg p-3 flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
+                    <span className="text-red-700 text-xs">
                       Estoque abaixo do mínimo ({item.estoqueMinimo} {item.unidade})
-                    </AlertDescription>
-                  </Alert>
+                    </span>
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -527,7 +334,7 @@ export default function Estoque() {
               Tente ajustar os filtros ou adicionar um novo item ao estoque.
             </p>
             <Button 
-              onClick={handleAddNew}
+              onClick={() => handleAddNew()}
               className="bg-gradient-to-r from-primary via-primary/95 to-primary/90 hover:from-primary/90 hover:via-primary/85 hover:to-primary/80 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 font-semibold"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -551,7 +358,7 @@ export default function Estoque() {
                 Formulário de estoque será implementado aqui.
               </p>
               <div className="flex gap-2">
-                <Button onClick={handleCloseForm} variant="outline" className="flex-1">
+                <Button onClick={() => handleCloseForm()} variant="outline" className="flex-1">
                   Cancelar
                 </Button>
                 <Button onClick={() => handleSave({})} className="flex-1">

@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ticketsService } from '@/services/tickets'
 import type {
-  Ticket,
   CreateTicketInput,
   UpdateTicketInput,
   TicketQuery

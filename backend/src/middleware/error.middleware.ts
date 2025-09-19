@@ -1,7 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
-import { ResponseHelper } from '../lib/response';
+import { NextFunction, Request, Response } from "express";
+import { ZodError } from "zod";
+import { ResponseHelper } from "../lib/response";
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -16,13 +15,13 @@ export class CustomError extends Error implements AppError {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
-    
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 export const errorHandler = (
-  error: Error | AppError | ZodError | Prisma.PrismaClientKnownRequestError,
+  error: Error | AppError | ZodError,
   req: Request,
   res: Response,
   next: NextFunction
@@ -41,43 +40,47 @@ export const errorHandler = (
   if (error instanceof ZodError) {
     return ResponseHelper.error(
       res,
-      'Dados de entrada inválidos',
+      "Dados de entrada inválidos",
       400,
-      error.errors.map(err => ({
-        field: err.path.join('.'),
+      error.errors.map((err) => ({
+        field: err.path.join("."),
         message: err.message,
       }))
     );
   }
 
-  // Prisma errors
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    switch (error.code) {
-      case 'P2002':
-        return ResponseHelper.error(res, 'Registro duplicado', 409, {
-          field: error.meta?.target,
-        });
-      case 'P2025':
-        return ResponseHelper.error(res, 'Registro não encontrado', 404);
-      case 'P2003':
-        return ResponseHelper.error(res, 'Violação de chave estrangeira', 400);
-      case 'P2014':
-        return ResponseHelper.error(res, 'Violação de relacionamento', 400);
-      default:
-        return ResponseHelper.error(res, 'Erro no banco de dados', 500);
-    }
+  // Database errors (Supabase)
+  if (
+    error.message.includes("duplicate key") ||
+    error.message.includes("unique constraint")
+  ) {
+    return ResponseHelper.error(res, "Registro duplicado", 409);
+  }
+
+  if (
+    error.message.includes("not found") ||
+    error.message.includes("does not exist")
+  ) {
+    return ResponseHelper.error(res, "Registro não encontrado", 404);
+  }
+
+  if (
+    error.message.includes("foreign key") ||
+    error.message.includes("constraint")
+  ) {
+    return ResponseHelper.error(res, "Violação de chave estrangeira", 400);
   }
 
   // Custom application errors
-  if ('statusCode' in error && error.statusCode) {
+  if ("statusCode" in error && error.statusCode) {
     return ResponseHelper.error(res, error.message, error.statusCode);
   }
 
   // Default server error
   return ResponseHelper.error(
     res,
-    process.env.NODE_ENV === 'production' 
-      ? 'Erro interno do servidor' 
+    process.env.NODE_ENV === "production"
+      ? "Erro interno do servidor"
       : error.message,
     500
   );

@@ -1,18 +1,12 @@
-import { useState } from 'react'
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  flexRender,
-  type ColumnDef,
-  type SortingState,
-  type ColumnFiltersState,
-} from '@tanstack/react-table'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -20,59 +14,64 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { 
-  MoreHorizontal, 
-  ArrowUpDown, 
-  Search, 
-  Filter,
-  Package,
-  Calendar,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+} from "@tanstack/react-table";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
   AlertTriangle,
-  CheckCircle,
-  Eye,
-  Edit,
-  Trash2,
+  ArrowDownCircle,
   ArrowUpCircle,
-  ArrowDownCircle
-} from 'lucide-react'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+  ArrowUpDown,
+  CheckCircle,
+  Edit,
+  Eye,
+  Filter,
+  MoreHorizontal,
+  Package,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { useState } from "react";
 
 export interface Lote {
-  id: string
-  codigo: string
-  fornecedorId: string
-  fornecedorNome: string
-  dataEntrada: string
-  quantidade: number
-  quantidadeDisponivel: number
-  qualidade: 'premium' | 'especial' | 'comercial'
-  umidade: number
-  fermentacao: 'excelente' | 'boa' | 'regular'
-  precoKg: number
-  valorTotal: number
-  dataValidade: string
-  localizacao: string
-  observacoes?: string
-  status: 'ativo' | 'reservado' | 'vencido' | 'esgotado'
-  createdAt: string
+  id: string;
+  codigo: string;
+  fornecedorId: string;
+  fornecedorNome: string;
+  dataEntrada: string;
+  quantidade: number;
+  quantidadeDisponivel: number;
+  qualidade: "premium" | "especial" | "comercial";
+  umidade: number;
+  fermentacao: "excelente" | "boa" | "regular";
+  precoKg: number;
+  valorTotal: number;
+  dataValidade: string;
+  localizacao: string;
+  observacoes?: string;
+  status: "ativo" | "reservado" | "vencido" | "esgotado";
+  createdAt: string;
 }
 
 interface LoteTableProps {
-  lotes: Lote[]
-  onView: (lote: Lote) => void
-  onEdit: (lote: Lote) => void
-  onDelete: (id: string) => void
-  onEntrada: (loteId: string) => void
-  onSaida: (loteId: string) => void
-  isLoading?: boolean
+  lotes: Lote[];
+  onView: (lote: Lote) => void;
+  onEdit: (lote: Lote) => void;
+  onDelete: (id: string) => void;
+  onEntrada: (loteId: string) => void;
+  onSaida: (loteId: string) => void;
+  isLoading?: boolean;
 }
 
 export default function LoteTable({
@@ -82,54 +81,66 @@ export default function LoteTable({
   onDelete,
   onEntrada,
   onSaida,
-  isLoading = false
+  isLoading = false,
 }: LoteTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [globalFilter, setGlobalFilter] = useState('')
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
 
-  const getStatusBadge = (status: Lote['status']) => {
+  const getStatusBadge = (status: Lote["status"]) => {
     const variants = {
-      ativo: { variant: 'default' as const, label: 'Ativo', icon: CheckCircle },
-      reservado: { variant: 'secondary' as const, label: 'Reservado', icon: Package },
-      vencido: { variant: 'destructive' as const, label: 'Vencido', icon: AlertTriangle },
-      esgotado: { variant: 'outline' as const, label: 'Esgotado', icon: Package }
-    }
-    const config = variants[status]
-    const Icon = config.icon
+      ativo: { variant: "default" as const, label: "Ativo", icon: CheckCircle },
+      reservado: {
+        variant: "secondary" as const,
+        label: "Reservado",
+        icon: Package,
+      },
+      vencido: {
+        variant: "destructive" as const,
+        label: "Vencido",
+        icon: AlertTriangle,
+      },
+      esgotado: {
+        variant: "outline" as const,
+        label: "Esgotado",
+        icon: Package,
+      },
+    };
+    const config = variants[status];
+    const Icon = config.icon;
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         <Icon className="h-3 w-3" />
         {config.label}
       </Badge>
-    )
-  }
+    );
+  };
 
-  const getQualidadeBadge = (qualidade: Lote['qualidade']) => {
+  const getQualidadeBadge = (qualidade: Lote["qualidade"]) => {
     const variants = {
-      premium: { variant: 'default' as const, label: 'Premium' },
-      especial: { variant: 'secondary' as const, label: 'Especial' },
-      comercial: { variant: 'outline' as const, label: 'Comercial' }
-    }
-    const config = variants[qualidade]
-    return <Badge variant={config.variant}>{config.label}</Badge>
-  }
+      premium: { variant: "default" as const, label: "Premium" },
+      especial: { variant: "secondary" as const, label: "Especial" },
+      comercial: { variant: "outline" as const, label: "Comercial" },
+    };
+    const config = variants[qualidade];
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
 
   const getDiasParaVencimento = (dataValidade: string) => {
-    const hoje = new Date()
-    const vencimento = new Date(dataValidade)
-    const diffTime = vencimento.getTime() - hoje.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
+    const hoje = new Date();
+    const vencimento = new Date(dataValidade);
+    const diffTime = vencimento.getTime() - hoje.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   const columns: ColumnDef<Lote>[] = [
     {
-      accessorKey: 'codigo',
+      accessorKey: "codigo",
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 p-0 hover:bg-transparent"
         >
           Código
@@ -137,24 +148,24 @@ export default function LoteTable({
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="font-medium">{row.getValue('codigo')}</div>
+        <div className="font-medium">{row.getValue("codigo")}</div>
       ),
     },
     {
-      accessorKey: 'fornecedorNome',
-      header: 'Fornecedor',
+      accessorKey: "fornecedorNome",
+      header: "Fornecedor",
       cell: ({ row }) => (
         <div className="max-w-[150px] truncate">
-          {row.getValue('fornecedorNome')}
+          {row.getValue("fornecedorNome")}
         </div>
       ),
     },
     {
-      accessorKey: 'dataEntrada',
+      accessorKey: "dataEntrada",
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 p-0 hover:bg-transparent"
         >
           Data Entrada
@@ -162,16 +173,16 @@ export default function LoteTable({
         </Button>
       ),
       cell: ({ row }) => {
-        const data = new Date(row.getValue('dataEntrada'))
-        return format(data, 'dd/MM/yyyy', { locale: ptBR })
+        const data = new Date(row.getValue("dataEntrada"));
+        return format(data, "dd/MM/yyyy", { locale: ptBR });
       },
     },
     {
-      accessorKey: 'quantidade',
+      accessorKey: "quantidade",
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 p-0 hover:bg-transparent"
         >
           Quantidade
@@ -179,29 +190,31 @@ export default function LoteTable({
         </Button>
       ),
       cell: ({ row }) => {
-        const quantidade = row.getValue('quantidade') as number
-        const disponivel = row.original.quantidadeDisponivel
+        const quantidade = row.getValue("quantidade") as number;
+        const disponivel = row.original.quantidadeDisponivel;
         return (
           <div className="text-right">
-            <div className="font-medium">{disponivel.toLocaleString('pt-BR')} kg</div>
+            <div className="font-medium">
+              {disponivel.toLocaleString("pt-BR")} kg
+            </div>
             <div className="text-xs text-muted-foreground">
-              de {quantidade.toLocaleString('pt-BR')} kg
+              de {quantidade.toLocaleString("pt-BR")} kg
             </div>
           </div>
-        )
+        );
       },
     },
     {
-      accessorKey: 'qualidade',
-      header: 'Qualidade',
-      cell: ({ row }) => getQualidadeBadge(row.getValue('qualidade')),
+      accessorKey: "qualidade",
+      header: "Qualidade",
+      cell: ({ row }) => getQualidadeBadge(row.getValue("qualidade")),
     },
     {
-      accessorKey: 'precoKg',
+      accessorKey: "precoKg",
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="h-8 p-0 hover:bg-transparent"
         >
           Preço/kg
@@ -209,69 +222,70 @@ export default function LoteTable({
         </Button>
       ),
       cell: ({ row }) => {
-        const preco = row.getValue('precoKg') as number
+        const preco = row.getValue("precoKg") as number;
         return (
-          <div className="text-right font-medium">
-            R$ {preco.toFixed(2)}
-          </div>
-        )
+          <div className="text-right font-medium">R$ {preco.toFixed(2)}</div>
+        );
       },
     },
     {
-      accessorKey: 'dataValidade',
-      header: 'Validade',
+      accessorKey: "dataValidade",
+      header: "Validade",
       cell: ({ row }) => {
-        const dataValidade = row.getValue('dataValidade') as string
-        const diasParaVencimento = getDiasParaVencimento(dataValidade)
-        const data = new Date(dataValidade)
-        
+        const dataValidade = row.getValue("dataValidade") as string;
+        const diasParaVencimento = getDiasParaVencimento(dataValidade);
+        const data = new Date(dataValidade);
+
         return (
           <div className="text-right">
             <div className="font-medium">
-              {format(data, 'dd/MM/yyyy', { locale: ptBR })}
+              {format(data, "dd/MM/yyyy", { locale: ptBR })}
             </div>
-            <div className={`text-xs ${
-              diasParaVencimento <= 15 ? 'text-red-600' : 
-              diasParaVencimento <= 30 ? 'text-orange-600' : 
-              'text-muted-foreground'
-            }`}>
-              {diasParaVencimento > 0 ? `${diasParaVencimento} dias` : 'Vencido'}
+            <div
+              className={`text-xs ${
+                diasParaVencimento <= 15
+                  ? "text-red-600"
+                  : diasParaVencimento <= 30
+                  ? "text-orange-600"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {diasParaVencimento > 0
+                ? `${diasParaVencimento} dias`
+                : "Vencido"}
             </div>
           </div>
-        )
+        );
       },
     },
     {
-      accessorKey: 'localizacao',
-      header: 'Localização',
+      accessorKey: "localizacao",
+      header: "Localização",
       cell: ({ row }) => (
         <div className="text-center font-mono text-sm">
-          {row.getValue('localizacao')}
+          {row.getValue("localizacao")}
         </div>
       ),
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => getStatusBadge(row.getValue('status')),
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => getStatusBadge(row.getValue("status")),
     },
     {
-      id: 'actions',
-      header: 'Ações',
+      id: "actions",
+      header: "Ações",
       cell: ({ row }) => {
-        const lote = row.original
-        const podeMovimentar = lote.status === 'ativo' && lote.quantidadeDisponivel > 0
+        const lote = row.original;
+        const podeMovimentar =
+          lote.status === "ativo" && lote.quantidadeDisponivel > 0;
 
         return (
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onView(lote)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onView(lote)}>
               <Eye className="h-4 w-4" />
             </Button>
-            
+
             {podeMovimentar && (
               <>
                 <Button
@@ -304,7 +318,7 @@ export default function LoteTable({
                   <Edit className="mr-2 h-4 w-4" />
                   Editar
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onDelete(lote.id)}
                   className="text-red-600"
                 >
@@ -314,10 +328,10 @@ export default function LoteTable({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   const table = useReactTable({
     data: lotes,
@@ -339,7 +353,7 @@ export default function LoteTable({
         pageSize: 10,
       },
     },
-  })
+  });
 
   if (isLoading) {
     return (
@@ -354,7 +368,7 @@ export default function LoteTable({
           <div className="h-96 bg-muted animate-pulse" />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -366,7 +380,7 @@ export default function LoteTable({
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar lotes..."
-              value={globalFilter ?? ''}
+              value={globalFilter ?? ""}
               onChange={(event) => setGlobalFilter(String(event.target.value))}
               className="pl-8 w-64"
             />
@@ -405,7 +419,7 @@ export default function LoteTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -434,7 +448,7 @@ export default function LoteTable({
       {/* Paginação */}
       <div className="flex items-center justify-between space-x-2 py-4">
         <div className="text-sm text-muted-foreground">
-          Página {table.getState().pagination.pageIndex + 1} de{' '}
+          Página {table.getState().pagination.pageIndex + 1} de{" "}
           {table.getPageCount()}
         </div>
         <div className="space-x-2">
@@ -457,5 +471,5 @@ export default function LoteTable({
         </div>
       </div>
     </div>
-  )
+  );
 }

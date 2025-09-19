@@ -41,16 +41,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Ticket, TicketStatus } from "@/types/ticket";
-import {
-  Edit,
-  MoreHorizontal,
-  Printer,
-  Search,
-  ShoppingCart,
-  Trash2,
-} from "lucide-react";
 import { printTicket } from "@/lib/print";
+import type { Ticket, TicketStatus } from "@/types/ticket";
+import { Edit, MoreHorizontal, Printer, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 interface TicketTableProps {
@@ -139,12 +132,12 @@ export function TicketTable({
     }
   };
 
-  const handleConvertClick = (ticket: Ticket) => {
-    setTicketToConvert(ticket);
-    setPrecoPorKg(0);
-    setObservacoesConversao("");
-    setConvertDialogOpen(true);
-  };
+  // const handleConvertClick = (ticket: Ticket) => {
+  //   setTicketToConvert(ticket);
+  //   setPrecoPorKg(0);
+  //   setObservacoesConversao("");
+  //   setConvertDialogOpen(true);
+  // };
 
   const confirmConvert = async () => {
     if (ticketToConvert && precoPorKg > 0) {
@@ -264,13 +257,20 @@ export function TicketTable({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-white">
                         <DropdownMenuItem
-                          onClick={() => printTicket(ticket, { useThermalAPI: true, autoprint: true })}
+                          onClick={() =>
+                            printTicket(ticket, {
+                              useThermalAPI: true,
+                              autoprint: true,
+                            })
+                          }
                         >
                           <Printer className="mr-2 h-4 w-4" />
                           Imprimir Ticket (Térmica)
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => printTicket(ticket, { autoprint: true })}
+                          onClick={() =>
+                            printTicket(ticket, { autoprint: true })
+                          }
                         >
                           <Printer className="mr-2 h-4 w-4" />
                           Imprimir Ticket (Tradicional)
@@ -282,14 +282,14 @@ export function TicketTable({
                           <Edit className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
-                        {ticket.status === "PENDENTE" && (
+                        {/* {ticket.status === "PENDENTE" && (
                           <DropdownMenuItem
                             onClick={() => handleConvertClick(ticket)}
                           >
                             <ShoppingCart className="mr-2 h-4 w-4" />
                             Converter em Compra
                           </DropdownMenuItem>
-                        )}
+                        )} */}
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(ticket.id)}
                           disabled={ticket.status === "CONVERTIDO"}
@@ -391,7 +391,9 @@ export function TicketTable({
               <div className="p-3 bg-green-50 rounded-lg">
                 <p className="text-sm font-medium text-green-800">
                   Valor total: R${" "}
-                  {(Number(ticketToConvert.pesoLiquido) * precoPorKg).toFixed(2)}
+                  {(Number(ticketToConvert.pesoLiquido) * precoPorKg).toFixed(
+                    2
+                  )}
                 </p>
               </div>
             )}

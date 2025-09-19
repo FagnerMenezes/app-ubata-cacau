@@ -1,4 +1,5 @@
 import FornecedorForm from "@/components/fornecedores/FornecedorForm";
+import FornecedorTable from "@/components/fornecedores/FornecedorTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,8 @@ import type {
 import {
   Edit,
   Filter,
+  LayoutGrid,
+  List,
   Loader2,
   Mail,
   MapPin,
@@ -42,15 +45,16 @@ import {
   Search,
   Star,
   Trash2,
-  TrendingUp,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Fornecedores() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   //eslint-disable-next-line
-  const [statusFilter, setStatusFilter] = useState<string>("todos");
+  // const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedFornecedor, setSelectedFornecedor] =
     useState<Fornecedor | null>(null);
@@ -59,13 +63,22 @@ export default function Fornecedores() {
     null
   );
 
+  // Debounce para evitar requisições excessivas
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms de delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Hooks para gerenciar fornecedores
   const {
     data: fornecedoresData,
     isLoading,
     error,
   } = useFornecedores({
-    search: searchTerm || undefined,
+    search: debouncedSearchTerm || undefined,
   });
 
   const createFornecedorMutation = useCreateFornecedor();
@@ -74,15 +87,15 @@ export default function Fornecedores() {
   //const toggleStatusMutation = useToggleFornecedorStatus();
 
   const fornecedores = fornecedoresData?.data || [];
-  const totalFornecedores = fornecedores.length;
+  //const totalFornecedores = fornecedores.length;
   //const fornecedoresAtivos = fornecedores.filter(
   // (f) => f.status === "ativo"
   // ).length;
-  const qualidadeMedia =
-    fornecedores.length > 0
-      ? fornecedores.reduce((acc, f) => acc + (f?.saldo || 0), 0) /
-        fornecedores.length
-      : 0;
+  // const qualidadeMedia =
+  //  fornecedores.length > 0
+  //    ? fornecedores.reduce((acc, f) => acc + (f?.saldo || 0), 0) /
+  //      fornecedores.length
+  //   : 0;
 
   const handleAddNew = () => {
     setSelectedFornecedor(null);
@@ -189,7 +202,7 @@ export default function Fornecedores() {
       </div>
 
       {/* Estatísticas rápidas */}
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* <div className="grid gap-6 md:grid-cols-3">
         <Card className="group relative overflow-hidden border-border/30 bg-gradient-to-br from-card/95 via-card/90 to-card/85 shadow-xl shadow-primary/5 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:scale-[1.02] backdrop-blur-sm">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
@@ -230,7 +243,7 @@ export default function Fornecedores() {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Filtros e busca */}
       <Card className="border-border/30 bg-gradient-to-br from-card/95 via-card/90 to-card/85 shadow-xl shadow-primary/5 backdrop-blur-sm">
@@ -245,112 +258,140 @@ export default function Fornecedores() {
                 className="pl-10 border-border/50 bg-background/80 backdrop-blur-sm focus:border-primary/50 focus:ring-primary/20 transition-all duration-300"
               />
             </div>
-            <Button
-              variant="outline"
-              className="border-primary/30 bg-gradient-to-r from-background/80 to-primary/5 hover:from-primary/10 hover:to-primary/15 hover:border-primary/50 shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="border-primary/30 bg-gradient-to-r from-background/80 to-primary/5 hover:from-primary/10 hover:to-primary/15 hover:border-primary/50 shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filtros
+              </Button>
+              <div className="flex border border-border/30 rounded-lg overflow-hidden">
+                <Button
+                  variant={viewMode === "table" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                  className="rounded-none border-0"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "cards" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("cards")}
+                  className="rounded-none border-0"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Lista de fornecedores */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {fornecedores.map((fornecedor) => (
-          <Card
-            key={fornecedor.id}
-            className="group relative overflow-hidden border-border/30 bg-gradient-to-br from-card/95 via-card/90 to-card/85 shadow-xl shadow-primary/5 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:scale-[1.02] backdrop-blur-sm"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <CardHeader className="relative pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300">
-                    <Users className="h-5 w-5 text-primary" />
+      {viewMode === "table" ? (
+        <FornecedorTable
+          fornecedores={fornecedores}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          isLoading={isLoading}
+        />
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {fornecedores.map((fornecedor) => (
+            <Card
+              key={fornecedor.id}
+              className="group relative overflow-hidden border-border/30 bg-gradient-to-br from-card/95 via-card/90 to-card/85 shadow-xl shadow-primary/5 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:scale-[1.02] backdrop-blur-sm"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <CardHeader className="relative pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 group-hover:from-primary/30 group-hover:to-primary/20 transition-all duration-300">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text ">
+                        {fornecedor.nome}
+                      </CardTitle>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text ">
-                      {fornecedor.nome}
-                    </CardTitle>
-                    
-                  </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 hover:bg-gradient-to-br hover:from-primary/20 hover:to-accent/20"
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-gradient-to-br hover:from-primary/20 hover:to-accent/20"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-gradient-to-br from-card/98 to-card/95 backdrop-blur-2xl border border-border/30 shadow-2xl shadow-primary/10 rounded-2xl"
                     >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="bg-gradient-to-br from-card/98 to-card/95 backdrop-blur-2xl border border-border/30 shadow-2xl shadow-primary/10 rounded-2xl"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => handleEdit(fornecedor)}
-                      className="hover:bg-gradient-to-r hover:from-accent/20 hover:to-accent/10 transition-all duration-200 rounded-lg cursor-pointer"
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleDelete(fornecedor.id)}
-                      className="hover:bg-gradient-to-r hover:from-destructive/20 hover:to-destructive/10 hover:text-destructive transition-all duration-200 rounded-lg cursor-pointer"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent className="relative space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center text-sm text-muted-foreground/80">
-                  <MapPin className="h-4 w-4 mr-2 text-primary/70" />
-                  {fornecedor.endereco?.cidade}, {fornecedor.endereco?.estado}
+                      <DropdownMenuItem
+                        onClick={() => handleEdit(fornecedor)}
+                        className="hover:bg-gradient-to-r hover:from-accent/20 hover:to-accent/10 transition-all duration-200 rounded-lg cursor-pointer"
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDelete(fornecedor.id)}
+                        className="hover:bg-gradient-to-r hover:from-destructive/20 hover:to-destructive/10 hover:text-destructive transition-all duration-200 rounded-lg cursor-pointer"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <div className="flex items-center text-sm text-muted-foreground/80">
-                  <Phone className="h-4 w-4 mr-2 text-primary/70" />
-                  {fornecedor.contato?.telefone ||
-                    fornecedor.contato?.whatsapp ||
-                    "N/A"}
-                </div>
-                {fornecedor.contato?.email && (
+              </CardHeader>
+              <CardContent className="relative space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-center text-sm text-muted-foreground/80">
-                    <Mail className="h-4 w-4 mr-2 text-primary/70" />
-                    {fornecedor.contato.email}
+                    <MapPin className="h-4 w-4 mr-2 text-primary/70" />
+                    {fornecedor.endereco?.cidade}, {fornecedor.endereco?.estado}
                   </div>
-                )}
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                    <span className="text-sm font-semibold text-foreground/90">
-                      {fornecedor.qualidadeMedia?.toFixed(1) || "0.0"}
+                  <div className="flex items-center text-sm text-muted-foreground/80">
+                    <Phone className="h-4 w-4 mr-2 text-primary/70" />
+                    {fornecedor.contato?.telefone ||
+                      fornecedor.contato?.whatsapp ||
+                      "N/A"}
+                  </div>
+                  {fornecedor.contato?.email && (
+                    <div className="flex items-center text-sm text-muted-foreground/80">
+                      <Mail className="h-4 w-4 mr-2 text-primary/70" />
+                      {fornecedor.contato.email}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                      <span className="text-sm font-semibold text-foreground/90">
+                        {fornecedor.qualidadeMedia?.toFixed(1) || "0.0"}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground/70">
+                      Última compra:{" "}
+                      {fornecedor.ultimaCompra
+                        ? new Date(fornecedor.ultimaCompra).toLocaleDateString(
+                            "pt-BR"
+                          )
+                        : "Nunca"}
                     </span>
                   </div>
-                  <span className="text-xs text-muted-foreground/70">
-                    Última compra:{" "}
-                    {fornecedor.ultimaCompra
-                      ? new Date(fornecedor.ultimaCompra).toLocaleDateString(
-                          "pt-BR"
-                        )
-                      : "Nunca"}
-                  </span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Mensagem quando não há resultados */}
-      {fornecedores.length === 0 && (
+      {fornecedores?.length === 0 && (
         <Card className="border-border/30 bg-gradient-to-br from-card/95 via-card/90 to-card/85 shadow-xl shadow-primary/5 backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Users className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -381,7 +422,7 @@ export default function Fornecedores() {
 
       {/* Dialog de confirmação de exclusão */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
@@ -395,7 +436,7 @@ export default function Fornecedores() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 text-red-500"
             >
               Excluir
             </AlertDialogAction>

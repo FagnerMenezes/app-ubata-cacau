@@ -1,9 +1,15 @@
 import { Router } from "express";
 import { z } from "zod";
 import { PagamentoController } from "../controllers/pagamento.controller";
+import { authenticateToken } from "../middleware/auth.middleware";
+import { requireModuleAccess } from "../middleware/permissions.middleware";
 import { validateRequest } from "../middleware/validation.middleware";
 
 const router = Router();
+
+// Aplicar autenticação e permissões em todas as rotas
+router.use(authenticateToken);
+router.use(requireModuleAccess("pagamentos"));
 // ✅ Remover esta linha - não precisamos de instância para métodos estáticos
 // const pagamentoController = new PagamentoController();
 
@@ -13,7 +19,9 @@ const createPagamentoSchema = z.object({
     compraId: z.string().uuid(),
     valor: z.number().positive(),
     dataPagamento: z.string().datetime().optional(),
-    metodoPagamento: z.enum(["DINHEIRO", "PIX", "TRANSFERENCIA", "CHEQUE"]).optional(),
+    metodoPagamento: z
+      .enum(["DINHEIRO", "PIX", "TRANSFERENCIA", "CHEQUE"])
+      .optional(),
     observacoes: z.string().optional(),
   }),
 });

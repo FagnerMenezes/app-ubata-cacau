@@ -19,15 +19,24 @@ const relatorioFornecedoresSchema = baseFilterSchema.extend({
   formato: z.enum(["json", "csv", "pdf"]).default("json"),
 });
 
+const relatorioPagamentosSchema = baseFilterSchema.extend({
+  fornecedorId: z.string().optional(),
+  statusPagamento: z.enum(["PENDENTE", "PARCIAL", "PAGO"]).optional(),
+  formato: z.enum(["json", "csv", "pdf"]).default("json"),
+});
+
 const dashboardSchema = baseFilterSchema.extend({
   periodo: z.enum(["7d", "30d", "90d", "1y"]).optional(),
 });
 
-const fluxoCaixaSchema = z.object({
-  dataInicio: z.string().min(1, "Data de início é obrigatória"),
-  dataFim: z.string().min(1, "Data de fim é obrigatória"),
+const fluxoCaixaSchema = baseFilterSchema.extend({
   agrupamento: z.enum(["dia", "semana", "mes"]).default("dia"),
   formato: z.enum(["json", "csv"]).default("json"),
+});
+
+const relatorioUnificadoFornecedorSchema = baseFilterSchema.extend({
+  fornecedorId: z.string().min(1, "ID do fornecedor é obrigatório"),
+  formato: z.enum(["json", "pdf"]).default("json"),
 });
 
 export class RelatorioController {
@@ -71,7 +80,7 @@ export class RelatorioController {
   static async relatorioCompras(req: Request, res: Response) {
     try {
       const params = relatorioComprasSchema.parse(req.query);
-      //@ts-expect-error err
+
       const relatorio = await RelatorioService.relatorioCompras(params);
 
       if (params.formato !== "json") {
@@ -92,7 +101,7 @@ export class RelatorioController {
   static async relatorioFornecedores(req: Request, res: Response) {
     try {
       const params = relatorioFornecedoresSchema.parse(req.query);
-      //@ts-expect-error err
+
       const relatorio = await RelatorioService.relatorioFornecedores(params);
 
       if (params.formato !== "json") {
@@ -110,10 +119,31 @@ export class RelatorioController {
     }
   }
 
+  static async relatorioPagamentos(req: Request, res: Response) {
+    try {
+      const params = relatorioPagamentosSchema.parse(req.query);
+
+      const relatorio = await RelatorioService.relatorioPagamentos(params);
+
+      if (params.formato !== "json") {
+        RelatorioController.setDownloadHeaders(
+          res,
+          params.formato,
+          "relatorio-pagamentos"
+        );
+        return res.send(relatorio.pagamentos);
+      }
+
+      return res.json(relatorio);
+    } catch (error) {
+      return RelatorioController.handleError(error, res);
+    }
+  }
+
   static async dashboard(req: Request, res: Response) {
     try {
       const params = dashboardSchema.parse(req.query);
-      //@ts-expect-error err
+
       const dashboard = await RelatorioService.dashboard(params);
       return res.json(dashboard);
     } catch (error) {
@@ -132,7 +162,7 @@ export class RelatorioController {
           params.formato,
           "fluxo-caixa"
         );
-        return res.send(fluxoCaixa.fluxo);
+        return res.send(fluxoCaixa.movimentacoes);
       }
 
       return res.json(fluxoCaixa);
@@ -152,11 +182,10 @@ export class RelatorioController {
 
       // Buscar dados de forma paralela
       const [compras, fornecedores, dashboard] = await Promise.all([
-        //@ts-expect-error err
         RelatorioService.relatorioCompras(params),
-        //@ts-expect-error err
+
         RelatorioService.relatorioFornecedores(params),
-        //@ts-expect-error err
+
         RelatorioService.dashboard(params),
       ]);
 
@@ -187,6 +216,26 @@ export class RelatorioController {
       };
 
       return res.json(resumo);
+    } catch (error) {
+      return RelatorioController.handleError(error, res);
+    }
+  }
+
+  static async relatorioUnificadoFornecedor(req: Request, res: Response) {
+    try {
+      const params = relatorioUnificadoFornecedorSchema.parse(req.query);
+      const relatorio = await RelatorioService.relatorioUnificadoFornecedor(params);
+
+      if (params.formato === "pdf") {
+        RelatorioController.setDownloadHeaders(
+          res,
+          "pdf",
+          "relatorio-unificado-fornecedor"
+        );
+        return res.send(relatorio);
+      }
+
+      return res.json(relatorio);
     } catch (error) {
       return RelatorioController.handleError(error, res);
     }
