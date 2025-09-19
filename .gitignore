@@ -27,7 +27,7 @@ node_modules/
 # Node.js (backend)
 backend/node_modules/
 backend/.env
-backend/dist/
+
 
 # Vite/React (frontend)
 frontend/node_modules/

@@ -1,0 +1,21 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const compra_controller_1 = require("../controllers/compra.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const permissions_middleware_1 = require("../middleware/permissions.middleware");
+const validation_middleware_1 = require("../middleware/validation.middleware");
+const types_1 = require("../types");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticateToken);
+router.use((0, permissions_middleware_1.requireModuleAccess)("compras"));
+router.get("/estatisticas", compra_controller_1.CompraController.obterEstatisticas);
+router.get("/fornecedor/:fornecedorId", (0, validation_middleware_1.validateParams)(types_1.ParamsIdSchema), compra_controller_1.CompraController.listarPorFornecedor);
+router.post("/:id/calcular-status", (0, validation_middleware_1.validateParams)(types_1.ParamsIdSchema), compra_controller_1.CompraController.calcularStatusPagamento);
+router.get("/", (0, validation_middleware_1.validateQuery)(types_1.CompraQuerySchema), compra_controller_1.CompraController.findAll);
+router.get("/:id", (0, validation_middleware_1.validateParams)(types_1.ParamsIdSchema), compra_controller_1.CompraController.findById);
+router.post("/converter-ticket", (0, validation_middleware_1.validateBody)(types_1.CreateCompraSchema), compra_controller_1.CompraController.converterTicket);
+router.put("/:id", (0, validation_middleware_1.validateParams)(types_1.ParamsIdSchema), compra_controller_1.CompraController.update);
+router.delete("/:id", (0, validation_middleware_1.validateParams)(types_1.ParamsIdSchema), compra_controller_1.CompraController.delete);
+exports.default = router;
+//# sourceMappingURL=compra.routes.js.map
